@@ -104,27 +104,21 @@ const FALLBACK_STATIONS = [
 async function fetchOverpassStations() {
   const bbox = "40.8,20.4,42.4,23.1";
   const query = `[out:json][timeout:60];(node["amenity"="fuel"](${bbox});way["amenity"="fuel"](${bbox});relation["amenity"="fuel"](${bbox}););out center;`;
-
   const endpoints = [
     "https://overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
   ];
-
   for (const url of endpoints) {
     try {
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: "data=" + encodeURIComponent(query),
-        signal: AbortSignal.timeout(65000), // 65s to match query timeout
+        signal: AbortSignal.timeout(65000),
       });
-
       if (!res.ok) continue;
-
       const data = await res.json();
-
       if (!data.elements || data.elements.length === 0) continue;
-
       return data.elements.map(el => {
         const tags = el.tags || {};
         let lat, lng;
@@ -132,10 +126,8 @@ async function fetchOverpassStations() {
         else if (el.center)       { lat = el.center.lat; lng = el.center.lon; }
         else return null;
         if (!lat || !lng) return null;
-
         return {
-          id:    el.id,
-          lat, lng,
+          id: el.id, lat, lng,
           brand: detectBrand(tags),
           name:  tags.name || tags["name:mk"] || tags["name:en"] || "Бензинска",
           addr:  [tags["addr:street"], tags["addr:city"]].filter(Boolean).join(", ") || tags.city || "",
@@ -143,37 +135,34 @@ async function fetchOverpassStations() {
           fuels: parseFuels(tags),
         };
       }).filter(Boolean);
-
     } catch (err) {
       console.warn(`Overpass failed on ${url}:`, err);
-      // try next mirror
     }
   }
-
   throw new Error("All Overpass mirrors failed");
 }
-// ─── Sub-components ───────────────────────────────────────────────────────────
+
+// ─── Colors ───────────────────────────────────────────────────────────────────
 const C = {
   bg:"#FAF9F7", surface:"#FFFFFF", surface2:"#F5F4F1", surface3:"#EEECEA",
   border:"#E6E3DD", borderHover:"#CAC7BF",
   orange:"#EA580C", orangeBg:"#FFF4EE", orangeBorder:"#FDD5BC",
   text:"#1C1917", textMid:"#57534E", muted:"#A8A29E",
 };
-
 const FUEL_LIST = ["Бензин 95","Бензин 98+","Дизел","LPG","CNG"];
 
 function Spinner() {
   return (
-    <div style={{ width:14,height:14,border:`2px solid ${C.orange}`,borderTopColor:"transparent",
-      borderRadius:"50%",animation:"spin .7s linear infinite",flexShrink:0 }} />
+    <div style={{ width:14, height:14, border:`2px solid ${C.orange}`, borderTopColor:"transparent",
+      borderRadius:"50%", animation:"spin .7s linear infinite", flexShrink:0 }} />
   );
 }
 
 export default function BenzinskiPage() {
-  const mapRef      = useRef(null);
-  const leafletRef  = useRef(null); // L instance + _map
-  const markersRef  = useRef([]);
-  const userMkrRef  = useRef(null);
+  const mapRef     = useRef(null);
+  const leafletRef = useRef(null);
+  const markersRef = useRef([]);
+  const userMkrRef = useRef(null);
 
   const [allStations,    setAllStations]    = useState([]);
   const [filtered,       setFiltered]       = useState([]);
@@ -187,14 +176,25 @@ export default function BenzinskiPage() {
   const [loadMsg,        setLoadMsg]        = useState("Вчитување...");
   const [locating,       setLocating]       = useState(false);
   const [locErr,         setLocErr]         = useState(null);
+  const [sidebarOpen,    setSidebarOpen]    = useState(false);
+  const [width,          setWidth]          = useState(1024);
 
-  // ── Load Leaflet + init map ──────────────────────────────────────────────
+  const isMobile = width < 640;
+
+  // ── Window width ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    setWidth(window.innerWidth);
+    const h = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+
+  // ── Load Leaflet + init map ───────────────────────────────────────────────
   useEffect(() => {
     const cssLink = document.createElement("link");
     cssLink.rel = "stylesheet";
     cssLink.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
     document.head.appendChild(cssLink);
-
     const script = document.createElement("script");
     script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
     script.onload = () => {
@@ -210,27 +210,27 @@ export default function BenzinskiPage() {
     return () => { leafletRef.current?.map?.remove(); };
   }, []);
 
-  // ── Fetch stations ───────────────────────────────────────────────────────
-useEffect(() => {
-  (async () => {
-    setLoading(true);
-    setLoadMsg("🔄 Вчитување од OpenStreetMap...");
-    let stations;
-    try {
-      stations = await fetchOverpassStations();
-      if (!stations || stations.length === 0) throw new Error("empty");
-      setLoadMsg(`✓ Вчитани ${stations.length} станици`);
-    } catch {
-      setLoadMsg("⚠️ OSM недостапен — локални податоци");
-      await new Promise(r => setTimeout(r, 600));
-      stations = FALLBACK_STATIONS;
-    }
-    setAllStations(stations);
-    setLoading(false);
-  })();
-}, []);
+  // ── Fetch stations ────────────────────────────────────────────────────────
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      setLoadMsg("🔄 Вчитување од OpenStreetMap...");
+      let stations;
+      try {
+        stations = await fetchOverpassStations();
+        if (!stations || stations.length === 0) throw new Error("empty");
+        setLoadMsg(`✓ Вчитани ${stations.length} станици`);
+      } catch {
+        setLoadMsg("⚠️ OSM недостапен — локални податоци");
+        await new Promise(r => setTimeout(r, 600));
+        stations = FALLBACK_STATIONS;
+      }
+      setAllStations(stations);
+      setLoading(false);
+    })();
+  }, []);
 
-  // ── Apply filters ────────────────────────────────────────────────────────
+  // ── Apply filters ─────────────────────────────────────────────────────────
   useEffect(() => {
     let result = allStations.filter(s => {
       if (!selectedBrands.has(s.brand)) return false;
@@ -248,7 +248,7 @@ useEffect(() => {
     setFiltered(result);
   }, [allStations, selectedBrands, selectedFuels, nearestStation, userPos]);
 
-  // ── Render map markers ───────────────────────────────────────────────────
+  // ── Render markers ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapReady || !leafletRef.current) return;
     const { L, map } = leafletRef.current;
@@ -261,7 +261,7 @@ useEffect(() => {
       const label = BRAND_LABELS[s.brand] || "?";
       const icon = L.divIcon({
         html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:${isNearest?"3px":"2px"} solid white;display:flex;align-items:center;justify-content:center;font-size:${isNearest?13:8}px;font-weight:800;color:white;box-shadow:${isNearest?`0 0 0 3px ${color}66,0 3px 12px ${color}88`:`0 2px 8px ${color}66`};cursor:pointer">${isNearest?"⭐":label.substring(0,2)}</div>`,
-        className: "", iconSize:[size,size], iconAnchor:[size/2,size/2],
+        className:"", iconSize:[size,size], iconAnchor:[size/2,size/2],
       });
       const marker = L.marker([s.lat,s.lng],{icon}).addTo(map);
       marker.on("click", () => { flyTo(s.lat,s.lng,15); setSelectedId(s.id); });
@@ -269,7 +269,7 @@ useEffect(() => {
     });
   }, [mapReady, filtered, nearestStation]);
 
-  // ── Render user dot ──────────────────────────────────────────────────────
+  // ── Render user dot ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapReady || !leafletRef.current || !userPos) return;
     const { L, map } = leafletRef.current;
@@ -281,25 +281,16 @@ useEffect(() => {
     userMkrRef.current = L.marker([userPos.lat,userPos.lng],{icon,zIndexOffset:1000}).addTo(map);
   }, [mapReady, userPos]);
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────────
   const flyTo = useCallback((lat, lng, zoom=15) => {
     leafletRef.current?.map?.flyTo([lat,lng], zoom, { duration:0.5 });
   }, []);
 
   const toggleBrand = (b) => {
-    setSelectedBrands(prev => {
-      const next = new Set(prev);
-      next.has(b) ? next.delete(b) : next.add(b);
-      return next;
-    });
+    setSelectedBrands(prev => { const n = new Set(prev); n.has(b)?n.delete(b):n.add(b); return n; });
   };
-
   const toggleFuel = (f) => {
-    setSelectedFuels(prev => {
-      const next = new Set(prev);
-      next.has(f) ? next.delete(f) : next.add(f);
-      return next;
-    });
+    setSelectedFuels(prev => { const n = new Set(prev); n.has(f)?n.delete(f):n.add(f); return n; });
   };
 
   const findNearest = useCallback(() => {
@@ -323,12 +314,123 @@ useEffect(() => {
     }, { enableHighAccuracy:true, timeout:8000 });
   }, [allStations]);
 
-  // ── Derived ──────────────────────────────────────────────────────────────
+  // ── Derived ───────────────────────────────────────────────────────────────
   const selectedStation = selectedId ? filtered.find(s => s.id === selectedId) : null;
-  const activeBrands = [...new Set(allStations.map(s => s.brand))].sort();
-  const cities = new Set(allStations.map(s => s.city).filter(Boolean));
+  const activeBrands    = [...new Set(allStations.map(s => s.brand))].sort();
+  const cities          = new Set(allStations.map(s => s.city).filter(Boolean));
 
-  // ── Render ───────────────────────────────────────────────────────────────
+  // ── Sidebar content (shared between mobile drawer and desktop panel) ──────
+  const SidebarContent = () => (
+    <>
+      <div style={{ padding:"14px 14px 10px", borderBottom:`1px solid ${C.border}` }}>
+
+        {/* Locate button */}
+        <button onClick={findNearest} disabled={locating} style={{
+          width:"100%", marginBottom:10, padding:"10px 12px", borderRadius:9,
+          cursor:locating?"wait":"pointer", fontFamily:"inherit", fontSize:13, fontWeight:700,
+          display:"flex", alignItems:"center", justifyContent:"center", gap:7,
+          background:nearestStation?"#F0FDF4":C.orangeBg,
+          border:`1px solid ${nearestStation?"#86EFAC":C.orangeBorder}`,
+          color:nearestStation?"#15803D":C.orange, opacity:locating?0.7:1, transition:"all .15s",
+        }}>
+          {locating ? <><Spinner/>Пронаоѓање...</> :
+           nearestStation ? <>✓ {nearestStation.name.split(" ").slice(0,3).join(" ")}</> :
+           <>📍 Најблиска бензинска</>}
+        </button>
+
+        {/* Nearest card */}
+        {nearestStation && (
+          <div onClick={() => { flyTo(nearestStation.lat,nearestStation.lng,15); setSelectedId(nearestStation.id); if(isMobile) setSidebarOpen(false); }}
+            style={{ background:"#F0FDF4", border:"1px solid #86EFAC", borderRadius:9,
+              padding:"10px 12px", marginBottom:10, cursor:"pointer" }}
+            onMouseEnter={e=>e.currentTarget.style.background="#DCFCE7"}
+            onMouseLeave={e=>e.currentTarget.style.background="#F0FDF4"}>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <div style={{ fontSize:18 }}>⭐</div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:12,fontWeight:700,color:"#15803D",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>
+                  {nearestStation.name}
+                </div>
+                <div style={{ fontSize:11, color:"#16A34A" }}>{formatDist(nearestStation.distance)} од вас</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {locErr && <div style={{ fontSize:11, color:"#DC2626", marginBottom:8 }}>⚠ {locErr}</div>}
+
+        {/* Brand filters */}
+        <div style={{ fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:C.muted,marginBottom:8 }}>Бренд</div>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginBottom:10 }}>
+          {activeBrands.map(b => {
+            const color = BRAND_COLORS[b]||BRAND_COLORS.other;
+            const active = selectedBrands.has(b);
+            return (
+              <button key={b} onClick={()=>toggleBrand(b)} style={{
+                padding:"4px 10px", borderRadius:6, cursor:"pointer", fontSize:11, fontWeight:600,
+                fontFamily:"inherit", transition:"all .12s",
+                border:`1px solid ${active?color+"55":C.border}`,
+                background:active?color+"18":C.surface2,
+                color:active?color:C.muted,
+              }}>{BRAND_LABELS[b]||b}</button>
+            );
+          })}
+        </div>
+
+        {/* Fuel filters */}
+        <div style={{ fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:C.muted,marginBottom:8 }}>Гориво</div>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+          {FUEL_LIST.map(f => {
+            const active = selectedFuels.has(f);
+            return (
+              <button key={f} onClick={()=>toggleFuel(f)} style={{
+                padding:"3px 8px", borderRadius:5, cursor:"pointer", fontSize:10, fontWeight:600,
+                fontFamily:"inherit", transition:"all .12s",
+                border:`1px solid ${active?C.textMid:C.border}`,
+                background:active?C.surface3:C.surface2,
+                color:active?C.text:C.muted,
+              }}>{f}</button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Station list */}
+      <div style={{ flex:1, overflowY:"auto", padding:"6px 6px 16px" }}>
+        {filtered.map(s => {
+          const color = BRAND_COLORS[s.brand]||BRAND_COLORS.other;
+          const isNearest = nearestStation?.id===s.id;
+          const isSel = selectedId===s.id;
+          return (
+            <div key={s.id}
+              onClick={() => { flyTo(s.lat,s.lng,15); setSelectedId(s.id); if(isMobile) setSidebarOpen(false); }}
+              style={{ padding:"9px 10px", borderRadius:8, cursor:"pointer", marginBottom:1,
+                transition:"all .12s", display:"flex", alignItems:"center", gap:9,
+                background:isSel?C.surface3:isNearest?"#F0FDF4":"transparent",
+                border:`1px solid ${isSel?color+"40":isNearest?"#86EFAC":"transparent"}` }}
+              onMouseEnter={e=>{ if(!isSel) e.currentTarget.style.background=C.surface2; }}
+              onMouseLeave={e=>{ if(!isSel) e.currentTarget.style.background=isNearest?"#F0FDF4":"transparent"; }}>
+              <div style={{ width:26,height:26,borderRadius:"50%",background:color,flexShrink:0,
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontSize:isNearest?12:8,fontWeight:800,color:"#fff" }}>
+                {isNearest?"⭐":(BRAND_LABELS[s.brand]||"?").substring(0,2)}
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:12,fontWeight:600,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>
+                  {s.name}
+                </div>
+                <div style={{ fontSize:10, color:isNearest?"#16A34A":C.muted }}>
+                  {isNearest&&nearestStation?.distance?formatDist(nearestStation.distance)+" · ":""}{s.city}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
       <Head>
@@ -344,6 +446,7 @@ useEffect(() => {
           ::-webkit-scrollbar-thumb{background:${C.border};border-radius:2px}
           @keyframes spin{to{transform:rotate(360deg)}}
           @keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+          @keyframes fadeUpFull{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
         `}</style>
       </Head>
 
@@ -351,158 +454,75 @@ useEffect(() => {
 
         {/* HEADER */}
         <header style={{ height:52, flexShrink:0, background:C.surface, borderBottom:`1px solid ${C.border}`,
-          display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 20px", zIndex:1000 }}>
+          display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px", zIndex:1000 }}>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            {/* Hamburger — mobile only */}
+            {isMobile && (
+              <button onClick={()=>setSidebarOpen(o=>!o)} style={{
+                width:34, height:34, borderRadius:8, border:`1px solid ${C.border}`,
+                background:sidebarOpen?C.surface3:C.surface2, cursor:"pointer",
+                fontSize:16, display:"flex", alignItems:"center", justifyContent:"center",
+                color:C.text, marginRight:2, flexShrink:0,
+              }}>
+                {sidebarOpen ? "✕" : "☰"}
+              </button>
+            )}
             <a href="/" style={{ fontWeight:800, fontSize:18, color:C.orange, textDecoration:"none" }}>makceni.mk</a>
             <div style={{ width:1, height:14, background:C.border }}/>
             <span style={{ fontSize:12, color:C.muted, fontWeight:500 }}>Бензински</span>
           </div>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-            <span style={{ fontSize:11, color:C.muted }}>
-              {loading ? loadMsg : `${filtered.length} / ${allStations.length} станици · ${cities.size} општини`}
-            </span>
+            {!isMobile && (
+              <span style={{ fontSize:11, color:C.muted }}>
+                {loading ? loadMsg : `${filtered.length} / ${allStations.length} станици · ${cities.size} општини`}
+              </span>
+            )}
             <a href="/safecity" style={{ fontSize:11, fontWeight:600, color:"#DC2626", background:"#FEF2F2",
-              border:"1px solid #FECACA", borderRadius:7, padding:"5px 12px", textDecoration:"none" }}>
-              📷 Safe City
+              border:"1px solid #FECACA", borderRadius:7, padding:"5px 10px", textDecoration:"none" }}>
+              {isMobile ? "📷" : "📷 Safe City"}
             </a>
             <a href="/" style={{ fontSize:11, fontWeight:500, color:C.muted, background:C.surface2,
-              border:`1px solid ${C.border}`, borderRadius:7, padding:"5px 12px", textDecoration:"none" }}>
-              ← Назад
+              border:`1px solid ${C.border}`, borderRadius:7, padding:"5px 10px", textDecoration:"none" }}>
+              {isMobile ? "←" : "← Назад"}
             </a>
           </div>
         </header>
 
-        <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
+        <div style={{ flex:1, display:"flex", overflow:"hidden", position:"relative" }}>
 
-          {/* SIDEBAR */}
-          <div style={{ width:280, background:C.surface, borderRight:`1px solid ${C.border}`,
-            display:"flex", flexDirection:"column", flexShrink:0 }}>
+          {/* MOBILE BACKDROP */}
+          {isMobile && sidebarOpen && (
+            <div onClick={()=>setSidebarOpen(false)} style={{
+              position:"absolute", inset:0, background:"rgba(0,0,0,0.45)",
+              backdropFilter:"blur(2px)", WebkitBackdropFilter:"blur(2px)", zIndex:400,
+            }}/>
+          )}
 
-            {/* Sidebar top controls */}
-            <div style={{ padding:"14px 14px 10px", borderBottom:`1px solid ${C.border}` }}>
-
-              {/* Locate button */}
-              <button
-                onClick={findNearest}
-                disabled={locating}
-                style={{ width:"100%", marginBottom:10, padding:"10px 12px", borderRadius:9,
-                  cursor:locating?"wait":"pointer", fontFamily:"inherit", fontSize:13, fontWeight:700,
-                  display:"flex", alignItems:"center", justifyContent:"center", gap:7,
-                  background:nearestStation?"#F0FDF4":C.orangeBg,
-                  border:`1px solid ${nearestStation?"#86EFAC":C.orangeBorder}`,
-                  color:nearestStation?"#15803D":C.orange, opacity:locating?.7:1, transition:"all .15s" }}>
-                {locating ? <><Spinner/>Пронаоѓање...</> :
-                 nearestStation ? <>✓ {nearestStation.name.split(" ").slice(0,3).join(" ")}</> :
-                 <>📍 Најблиска бензинска</>}
-              </button>
-
-              {/* Nearest card */}
-              {nearestStation && (
-                <div
-                  onClick={() => { flyTo(nearestStation.lat,nearestStation.lng,15); setSelectedId(nearestStation.id); }}
-                  style={{ background:"#F0FDF4", border:"1px solid #86EFAC", borderRadius:9,
-                    padding:"10px 12px", marginBottom:10, cursor:"pointer" }}
-                  onMouseEnter={e=>e.currentTarget.style.background="#DCFCE7"}
-                  onMouseLeave={e=>e.currentTarget.style.background="#F0FDF4"}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <div style={{ fontSize:18 }}>⭐</div>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontSize:12,fontWeight:700,color:"#15803D",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>
-                        {nearestStation.name}
-                      </div>
-                      <div style={{ fontSize:11, color:"#16A34A" }}>
-                        {formatDist(nearestStation.distance)} од вас
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {locErr && <div style={{ fontSize:11, color:"#DC2626", marginBottom:8 }}>⚠ {locErr}</div>}
-
-              {/* Brand filters */}
-              <div style={{ fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:C.muted,marginBottom:8 }}>
-                Бренд
-              </div>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginBottom:10 }}>
-                {activeBrands.map(b => {
-                  const color = BRAND_COLORS[b]||BRAND_COLORS.other;
-                  const active = selectedBrands.has(b);
-                  return (
-                    <button key={b} onClick={()=>toggleBrand(b)} style={{
-                      padding:"4px 10px", borderRadius:6, cursor:"pointer", fontSize:11, fontWeight:600,
-                      fontFamily:"inherit", transition:"all .12s",
-                      border:`1px solid ${active?color+"55":C.border}`,
-                      background:active?color+"18":C.surface2,
-                      color:active?color:C.muted,
-                    }}>
-                      {BRAND_LABELS[b]||b}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Fuel filters */}
-              <div style={{ fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:C.muted,marginBottom:8 }}>
-                Гориво
-              </div>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
-                {FUEL_LIST.map(f => {
-                  const active = selectedFuels.has(f);
-                  return (
-                    <button key={f} onClick={()=>toggleFuel(f)} style={{
-                      padding:"3px 8px", borderRadius:5, cursor:"pointer", fontSize:10, fontWeight:600,
-                      fontFamily:"inherit", transition:"all .12s",
-                      border:`1px solid ${active?C.textMid:C.border}`,
-                      background:active?C.surface3:C.surface2,
-                      color:active?C.text:C.muted,
-                    }}>
-                      {f}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Station list */}
-            <div style={{ flex:1, overflowY:"auto", padding:"6px 6px 16px" }}>
-              {filtered.map(s => {
-                const color = BRAND_COLORS[s.brand]||BRAND_COLORS.other;
-                const isNearest = nearestStation?.id===s.id;
-                const isSel = selectedId===s.id;
-                return (
-                  <div
-                    key={s.id}
-                    onClick={() => { flyTo(s.lat,s.lng,15); setSelectedId(s.id); }}
-                    style={{ padding:"9px 10px", borderRadius:8, cursor:"pointer", marginBottom:1,
-                      transition:"all .12s", display:"flex", alignItems:"center", gap:9,
-                      background:isSel?C.surface3:isNearest?"#F0FDF4":"transparent",
-                      border:`1px solid ${isSel?color+"40":isNearest?"#86EFAC":"transparent"}` }}
-                    onMouseEnter={e=>{ if(!isSel) e.currentTarget.style.background=C.surface2; }}
-                    onMouseLeave={e=>{ if(!isSel) e.currentTarget.style.background=isNearest?"#F0FDF4":"transparent"; }}>
-                    <div style={{ width:26, height:26, borderRadius:"50%", background:color, flexShrink:0,
-                      display:"flex", alignItems:"center", justifyContent:"center",
-                      fontSize:isNearest?12:8, fontWeight:800, color:"#fff" }}>
-                      {isNearest ? "⭐" : (BRAND_LABELS[s.brand]||"?").substring(0,2)}
-                    </div>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontSize:12,fontWeight:600,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>
-                        {s.name}
-                      </div>
-                      <div style={{ fontSize:10, color:isNearest?"#16A34A":C.muted }}>
-                        {isNearest&&nearestStation?.distance?formatDist(nearestStation.distance)+" · ":""}{s.city}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          {/* SIDEBAR — desktop: static, mobile: slide-in overlay */}
+          <div style={{
+            width: 280,
+            background: C.surface,
+            borderRight: `1px solid ${C.border}`,
+            display: "flex",
+            flexDirection: "column",
+            flexShrink: 0,
+            ...(isMobile ? {
+              position: "absolute",
+              top: 0, left: 0, bottom: 0,
+              zIndex: 500,
+              transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+              transition: "transform 0.3s cubic-bezier(0.16,1,0.3,1)",
+              boxShadow: sidebarOpen ? "4px 0 32px rgba(0,0,0,0.15)" : "none",
+            } : {}),
+          }}>
+            <SidebarContent />
           </div>
 
           {/* MAP */}
-          <div style={{ flex:1, position:"relative" }}>
+          <div style={{ flex:1, position:"relative" }}
+            onClick={() => { if(isMobile && sidebarOpen) setSidebarOpen(false); }}>
 
-            {/* Loading overlay */}
+            {/* Loading pill */}
             {loading && (
               <div style={{ position:"absolute", top:14, left:"50%", transform:"translateX(-50%)",
                 zIndex:600, background:C.surface, border:`1px solid ${C.border}`, borderRadius:8,
@@ -512,15 +532,39 @@ useEffect(() => {
               </div>
             )}
 
+            {/* Mobile list toggle button — shown when sidebar is closed */}
+            {isMobile && !sidebarOpen && (
+              <button onClick={()=>setSidebarOpen(true)} style={{
+                position:"absolute", top:14, left:14, zIndex:600,
+                display:"flex", alignItems:"center", gap:6,
+                padding:"9px 14px", borderRadius:10,
+                background:C.surface, border:`1px solid ${C.border}`,
+                boxShadow:"0 2px 12px rgba(0,0,0,0.1)",
+                fontSize:13, fontWeight:700, color:C.text,
+                cursor:"pointer", fontFamily:"inherit",
+              }}>
+                ☰ <span>{filtered.length} станици</span>
+              </button>
+            )}
+
             <div ref={mapRef} style={{ width:"100%", height:"100%" }}/>
 
             {/* Station popup */}
             {selectedStation && (
-              <div style={{ position:"absolute", bottom:24, left:"50%", transform:"translateX(-50%)",
-                zIndex:500, minWidth:310, maxWidth:400, background:C.surface, borderRadius:16,
-                padding:"18px 20px", boxShadow:"0 8px 40px rgba(0,0,0,.12)",
-                border:`1px solid ${C.borderHover}`, animation:"fadeUp .2s ease" }}>
-
+              <div style={{
+                position:"absolute",
+                bottom: isMobile ? 16 : 24,
+                left: isMobile ? 12 : "50%",
+                right: isMobile ? 12 : "auto",
+                transform: isMobile ? "none" : "translateX(-50%)",
+                zIndex:500,
+                minWidth: isMobile ? "auto" : 310,
+                maxWidth: isMobile ? "auto" : 400,
+                background:C.surface, borderRadius:16, padding:"18px 20px",
+                boxShadow:"0 8px 40px rgba(0,0,0,.12)",
+                border:`1px solid ${C.borderHover}`,
+                animation: isMobile ? "fadeUpFull .2s ease" : "fadeUp .2s ease",
+              }}>
                 {nearestStation?.id===selectedStation.id && (
                   <div style={{ fontSize:9,fontWeight:700,background:"#F0FDF4",color:"#15803D",
                     border:"1px solid #86EFAC",borderRadius:4,padding:"2px 7px",
@@ -528,7 +572,6 @@ useEffect(() => {
                     ⭐ Најблиска · {formatDist(nearestStation.distance)}
                   </div>
                 )}
-
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12 }}>
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase",
@@ -542,13 +585,11 @@ useEffect(() => {
                       {[selectedStation.addr,selectedStation.city].filter(Boolean).join(" · ")}
                     </div>
                   </div>
-                  <button onClick={()=>setSelectedId(null)}
-                    style={{ background:C.surface2,border:`1px solid ${C.border}`,borderRadius:6,
-                      color:C.muted,fontSize:14,cursor:"pointer",padding:"2px 7px",marginLeft:10 }}>
-                    ×
-                  </button>
+                  <button onClick={()=>setSelectedId(null)} style={{
+                    background:C.surface2, border:`1px solid ${C.border}`, borderRadius:6,
+                    color:C.muted, fontSize:14, cursor:"pointer", padding:"2px 7px", marginLeft:10,
+                  }}>×</button>
                 </div>
-
                 {selectedStation.fuels.length > 0 && (
                   <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginBottom:14 }}>
                     {selectedStation.fuels.map(f => (
@@ -559,9 +600,7 @@ useEffect(() => {
                     ))}
                   </div>
                 )}
-
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${selectedStation.lat},${selectedStation.lng}`}
+                <a href={`https://www.google.com/maps/dir/?api=1&destination=${selectedStation.lat},${selectedStation.lng}`}
                   target="_blank" rel="noopener noreferrer"
                   style={{ display:"block",textAlign:"center",background:C.orange,borderRadius:10,
                     padding:"12px",color:"#fff",fontSize:14,fontWeight:700,textDecoration:"none" }}>
@@ -570,23 +609,25 @@ useEffect(() => {
               </div>
             )}
 
-            {/* Legend */}
-            <div style={{ position:"absolute", top:14, right:14, zIndex:500,
-              background:"rgba(255,255,255,.94)", backdropFilter:"blur(8px)",
-              border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 12px",
-              boxShadow:"0 2px 8px rgba(0,0,0,.06)" }}>
-              {Object.entries(BRAND_COLORS).map(([k,color]) => (
-                <div key={k} style={{ display:"flex", alignItems:"center", gap:7, marginBottom:5 }}>
-                  <div style={{ width:7,height:7,borderRadius:"50%",background:color }}/>
-                  <span style={{ fontSize:11,color:C.textMid,fontWeight:500 }}>{BRAND_LABELS[k]||k}</span>
+            {/* Legend — desktop only */}
+            {!isMobile && (
+              <div style={{ position:"absolute", top:14, right:14, zIndex:500,
+                background:"rgba(255,255,255,.94)", backdropFilter:"blur(8px)",
+                border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 12px",
+                boxShadow:"0 2px 8px rgba(0,0,0,.06)" }}>
+                {Object.entries(BRAND_COLORS).map(([k,color]) => (
+                  <div key={k} style={{ display:"flex", alignItems:"center", gap:7, marginBottom:5 }}>
+                    <div style={{ width:7,height:7,borderRadius:"50%",background:color }}/>
+                    <span style={{ fontSize:11,color:C.textMid,fontWeight:500 }}>{BRAND_LABELS[k]||k}</span>
+                  </div>
+                ))}
+                <div style={{ borderTop:`1px solid ${C.border}`,marginTop:5,paddingTop:5,
+                  display:"flex",alignItems:"center",gap:7 }}>
+                  <span style={{ fontSize:12 }}>⭐</span>
+                  <span style={{ fontSize:11,color:"#15803D",fontWeight:600 }}>Најблиска</span>
                 </div>
-              ))}
-              <div style={{ borderTop:`1px solid ${C.border}`,marginTop:5,paddingTop:5,
-                display:"flex",alignItems:"center",gap:7 }}>
-                <span style={{ fontSize:12 }}>⭐</span>
-                <span style={{ fontSize:11,color:"#15803D",fontWeight:600 }}>Најблиска</span>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
