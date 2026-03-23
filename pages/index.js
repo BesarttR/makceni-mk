@@ -930,7 +930,7 @@ export default function Home() {
                   <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#D97706", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, boxShadow: "0 4px 12px rgba(217,119,6,0.4)" }}>⛽</div>
                   <span style={{ fontSize: 20, fontWeight: 800, color: "#92400E" }}>Бензинcки</span>
                 </div>
-                <div style={{ position: "absolute", top: 14, right: 14, background: "#92400E", color: "#FEF3C7", fontSize: 11, fontWeight: 700, borderRadius: 6, padding: "3px 9px" }}>27 локации</div>
+                <div style={{ position: "absolute", top: 14, right: 14, background: "#92400E", color: "#FEF3C7", fontSize: 11, fontWeight: 700, borderRadius: 6, padding: "3px 9px" }}>800+ локации</div>
               </div>
               <div style={{ padding: "14px 18px" }}>
                 <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 8 }}>Пронајди ја најблиската бензинска станица — OKTA, Макпетрол, Лукоил и повеќе.</div>
