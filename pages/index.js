@@ -630,7 +630,7 @@ function Berza() {
         <div>
           <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Берза</div>
           <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>
-            {data?.source ? `Извор: ${data.source}` : "Ажурирано секој ден"}
+            {data?.source ? `Извор: ${data.source}` : "Ажурирано секој час од јавни API-ја"}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 5, background: C.greenBg, border: `1px solid ${C.greenBdr}`, borderRadius: 20, padding: "3px 9px" }}>

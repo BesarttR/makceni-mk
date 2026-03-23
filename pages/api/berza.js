@@ -13,47 +13,64 @@ const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
 // ── Oil: Alpha Vantage ─────────────────────────────────
 async function fetchOil(type) {
-  const key = process.env.ALPHA_VANTAGE_KEY;
-  if (!key) throw new Error("No ALPHA_VANTAGE_KEY env var set");
+  const tickerMap = { WTI: "CL=F", BRENT: "BZ=F" };
+  const ticker = tickerMap[type];
 
   const res = await fetch(
-    `https://www.alphavantage.co/query?function=${type}&interval=daily&apikey=${key}`,
-    { signal: AbortSignal.timeout(10000) }
+    `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1h&range=1d`,
+    {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      signal: AbortSignal.timeout(10000),
+    }
   );
-  if (!res.ok) throw new Error(`Alpha Vantage ${res.status} for ${type}`);
-
+  if (!res.ok) throw new Error(`Yahoo Finance ${res.status} for ${ticker}`);
   const json = await res.json();
-  if (json.Note || json.Information) throw new Error("Alpha Vantage rate limit or key issue");
 
-  const valid = (json?.data || []).filter(d => d.value && d.value !== ".");
-  if (valid.length < 2) throw new Error(`Not enough data for ${type}`);
+  const result = json?.chart?.result?.[0];
+  if (!result) throw new Error(`Yahoo Finance: no result for ${ticker}`);
 
-  const price = parseFloat(valid[0].value);
-  const prev  = parseFloat(valid[1].value);
+  const closes = result?.indicators?.quote?.[0]?.close?.filter(v => v != null);
+  if (!closes || closes.length < 2) throw new Error(`Yahoo Finance: not enough data for ${ticker}`);
+
+  const price  = closes[closes.length - 1];
+  const prev   = closes[closes.length - 2];
   const change = prev ? parseFloat(((price - prev) / prev * 100).toFixed(2)) : 0;
+  const date   = new Date(result.meta.regularMarketTime * 1000).toISOString();
 
-  return { price: parseFloat(price.toFixed(2)), change, date: valid[0].date };
+  return { price: parseFloat(price.toFixed(2)), change, date };
 }
-
 // ── Metals: gold-api.com ───────────────────────────────
 async function fetchMetal(symbol) {
-  const res = await fetch(`https://api.gold-api.com/price/${symbol}`, {
-    headers: { "Accept": "application/json" },
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!res.ok) throw new Error(`gold-api.com ${res.status} for ${symbol}`);
-  const json = await res.json();
-  if (!json?.price) throw new Error(`gold-api.com: no price for ${symbol}`);
+  const tickerMap = { XAU: "GC=F", XAG: "SI=F" };
+  const ticker = tickerMap[symbol];
 
-  // Convert troy ounce → gram
-  const pricePerGram = parseFloat((json.price / TROY_OUNCE_TO_GRAM).toFixed(2));
+  const res = await fetch(
+    `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1h&range=1d`,
+    {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      signal: AbortSignal.timeout(10000),
+    }
+  );
+  if (!res.ok) throw new Error(`Yahoo Finance ${res.status} for ${ticker}`);
+  const json = await res.json();
+
+  const result = json?.chart?.result?.[0];
+  if (!result) throw new Error(`Yahoo Finance: no result for ${ticker}`);
+
+  const closes = result?.indicators?.quote?.[0]?.close?.filter(v => v != null);
+  if (!closes || closes.length < 2) throw new Error(`Yahoo Finance: not enough data for ${ticker}`);
+
+  const priceOz = closes[closes.length - 1];
+  const prevOz  = closes[closes.length - 2];
+  const change  = prevOz ? parseFloat(((priceOz - prevOz) / prevOz * 100).toFixed(2)) : 0;
+  const pricePerGram = parseFloat((priceOz / TROY_OUNCE_TO_GRAM).toFixed(2));
+
   return {
     price: pricePerGram,
-    change: 0,
-    date: json.updatedAt?.split("T")[0] || new Date().toISOString().split("T")[0],
+    change,
+    date: new Date(result.meta.regularMarketTime * 1000).toISOString().split("T")[0],
   };
 }
-
 // ── Crypto: CoinGecko (free, no key, instant) ──────────
 async function fetchCrypto() {
   const res = await fetch(
@@ -87,15 +104,15 @@ export default async function handler(req, res) {
   let brent = null, wti = null, gold = null, silver = null, crypto = null;
 
   // Oil — needs 13s delay between requests (Alpha Vantage 5req/min limit)
-  try {
-    brent = await fetchOil("BRENT");
-    await delay(13000);
-    wti = await fetchOil("WTI");
-    console.log(`✓ Oil: Brent $${brent.price}, WTI $${wti.price}`);
-  } catch (err) {
-    console.warn("✗ Oil failed:", err.message);
-  }
-
+try {
+  [brent, wti] = await Promise.all([
+    fetchOil("BRENT"),
+    fetchOil("WTI"),
+  ]);
+  console.log(`✓ Oil: Brent $${brent.price}, WTI $${wti.price}`);
+} catch (err) {
+  console.warn("✗ Oil failed:", err.message);
+}
   // Metals + Crypto in parallel — both instant, no rate limits
   try {
     [gold, silver, crypto] = await Promise.all([
@@ -165,7 +182,6 @@ export default async function handler(req, res) {
       },
     ],
     updatedAt: new Date().toISOString(),
-    source: brent ? "Alpha Vantage + gold-api.com + CoinGecko" : "fallback",
     stale: !brent,
   };
 

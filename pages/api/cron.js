@@ -1,5 +1,5 @@
 // pages/api/cron.js
-// Called by Vercel Cron every Tuesday at 00:05
+// Called by Vercel Cron every Tuesday at 00:01, 00:03, and 00:05 (3 separate calls to avoid timeouts)
 // 1. Fetches new prices from gorivo.mk (or RKE fallback)
 // 2. Sends email notifications to all subscribers
 //
