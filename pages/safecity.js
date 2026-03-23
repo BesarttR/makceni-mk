@@ -19,23 +19,30 @@ function getBearing(lat1, lng1, lat2, lng2) {
 function playWarningSound(audioCtx) {
   if (!audioCtx) return;
   const play = () => {
-    const beep = (freq, startTime, duration, vol = 0.4) => {
-      try {
-        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.type = "sine"; osc.frequency.setValueAtTime(freq, startTime);
+    try {
+      const beep = (freq, startTime, duration, vol = 0.5) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, startTime);
         gain.gain.setValueAtTime(0, startTime);
         gain.gain.linearRampToValueAtTime(vol, startTime + 0.01);
         gain.gain.linearRampToValueAtTime(0, startTime + duration);
-        osc.start(startTime); osc.stop(startTime + duration + 0.05);
-      } catch(e) { console.warn("beep failed:", e); }
-    };
-    const t = audioCtx.currentTime;
-    beep(1046, t, 0.1);
-    beep(880, t + 0.14, 0.15);
+        osc.start(startTime);
+        osc.stop(startTime + duration + 0.05);
+      };
+      const t = audioCtx.currentTime;
+      beep(1046, t, 0.15);
+      beep(880, t + 0.2, 0.2);
+      beep(1046, t + 0.45, 0.15);
+    } catch(e) {
+      console.warn("beep failed:", e);
+    }
   };
   if (audioCtx.state === "suspended") {
-    audioCtx.resume().then(play);
+    audioCtx.resume().then(play).catch(e => console.warn("resume failed:", e));
   } else {
     play();
   }
@@ -118,26 +125,32 @@ export default function SafeCityPage() {
     camerasRef.current.forEach((cam,idx)=>{
       const dist=getDistance(lat,lng,cam.lat,cam.lng);
       if(dist<=WARN_DISTANCE&&dist<closestDist){
-        // Direction check — only warn if camera is roughly ahead
         if(heading!==null&&heading!==undefined){
           const bearing=getBearing(lat,lng,cam.lat,cam.lng);
           const diff=Math.abs(heading-bearing)%360;
           const angleDiff=diff>180?360-diff:diff;
-          if(angleDiff>90) return; // Camera is behind or to the side, skip
+          if(angleDiff>90) return;
         }
         closestDist=dist;
         closest={...cam,_idx:idx};
       }
     });
-    if(closest){
-      const now=Date.now(),lastWarned=warnedCamerasRef.current[closest._idx]||0;
-      if(now-lastWarned>COOLDOWN_MS){
-        warnedCamerasRef.current[closest._idx]=now;
-        setProximityAlert({camera:closest,distance:Math.round(closestDist)});
-        if(soundEnabledRef.current) playWarningSound(audioCtxRef.current);
-        setTimeout(()=>setProximityAlert(null),5000);
+
+    if (closest) {
+      const now = Date.now(), lastWarned = warnedCamerasRef.current[closest._idx] || 0;
+      if (now - lastWarned > COOLDOWN_MS) {
+        warnedCamerasRef.current[closest._idx] = now;
+        setProximityAlert({ camera: closest, distance: Math.round(closestDist) });
+        if (soundEnabledRef.current) {
+          if (audioCtxRef.current?.state === "suspended") {
+            audioCtxRef.current.resume().then(() => playWarningSound(audioCtxRef.current));
+          } else {
+            playWarningSound(audioCtxRef.current);
+          }
+        }
+        setTimeout(() => setProximityAlert(null), 5000);
       } else {
-        setProximityAlert(prev=>prev?{...prev,distance:Math.round(closestDist)}:null);
+        setProximityAlert(prev => prev ? { ...prev, distance: Math.round(closestDist) } : null);
       }
     } else {
       setProximityAlert(null);
@@ -153,10 +166,7 @@ export default function SafeCityPage() {
         const{latitude,longitude,speed,heading}=pos.coords;
         if(speed!==null&&speed>=0){const kmh=Math.round(speed*3.6);setCurrentSpeed(kmh);lastSpeedRef.current=kmh;}
         else setCurrentSpeed(lastSpeedRef.current);
-
-        // Update heading ref
         if(heading!==null&&heading!==undefined) lastHeadingRef.current=heading;
-
         if(leafletRef.current){
           const L=leafletRef.current,map=L._map;
           const currentHeading=heading!==null&&heading!==undefined?heading:lastHeadingRef.current;
@@ -314,7 +324,6 @@ export default function SafeCityPage() {
 
       <div style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column"}} onClick={initAudio}>
 
-        {/* HEADER */}
         <header style={{height:isMobile?48:60,flexShrink:0,zIndex:1000,background:"#FFFFFF",borderBottom:"1px solid #E8E5DE",display:"flex",alignItems:"center",justifyContent:"space-between",padding:isMobile?"0 14px":"0 24px",boxShadow:"0 2px 8px rgba(0,0,0,0.06)"}}>
           <div style={{display:"flex",alignItems:"center",gap:isMobile?8:12}}>
             <a href="/" style={{fontWeight:800,fontSize:isMobile?16:20,color:"#F97316",textDecoration:"none",letterSpacing:-0.5}}>makceni.mk</a>
@@ -343,7 +352,6 @@ export default function SafeCityPage() {
         <div style={{flex:1,position:"relative"}}>
           <div ref={mapRef} style={{width:"100%",height:"100%"}}/>
 
-          {/* PROXIMITY ALERT */}
           {proximityAlert && (
             <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",zIndex:700,background:"#FFFFFF",border:"2px solid #DC2626",borderRadius:18,overflow:"hidden",width:"min(320px,88vw)",animation:"alertPulse 1.2s ease-out infinite,popIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards"}}>
               <div style={{background:"#DC2626",padding:"11px 16px",display:"flex",alignItems:"center",gap:8}}>
@@ -368,7 +376,6 @@ export default function SafeCityPage() {
             </div>
           )}
 
-          {/* SPEED */}
           {trackingActive && (
             <div style={{position:"absolute",bottom:80,right:16,zIndex:600,background:"#FFFFFF",border:`2px solid ${getSpeedColor(currentSpeed)}`,borderRadius:16,padding:"10px 16px",minWidth:84,textAlign:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.12)",transition:"border-color 0.3s"}}>
               <div style={{fontSize:38,fontWeight:800,lineHeight:1,color:getSpeedColor(currentSpeed),letterSpacing:-1,transition:"color 0.3s"}}>{currentSpeed!==null?currentSpeed:"--"}</div>
@@ -376,7 +383,6 @@ export default function SafeCityPage() {
             </div>
           )}
 
-          {/* DESKTOP INFO CARD */}
           {!isMobile && (
             <div style={{position:"absolute",top:16,left:16,zIndex:500,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(12px)",border:"1px solid #E8E5DE",borderRadius:14,padding:"16px 18px",maxWidth:280,boxShadow:"0 4px 20px rgba(0,0,0,0.1)"}}>
               <div style={{fontSize:16,fontWeight:800,color:"#1A1814",marginBottom:5}}>Камери за брзина</div>
@@ -424,7 +430,6 @@ export default function SafeCityPage() {
             </div>
           )}
 
-          {/* MOBILE FLOATING BUTTONS */}
           {isMobile && (
             <div style={{position:"absolute",top:12,left:"50%",transform:"translateX(-50%)",zIndex:500,display:"flex",gap:8}}>
               <button onClick={handleGpsToggle} style={{height:40,padding:"0 14px",borderRadius:20,background:trackingActive?"#F0FDF4":"#fff",border:`2px solid ${trackingActive?"#86EFAC":"#E8E5DE"}`,color:trackingActive?"#15803D":"#4A4640",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 2px 12px rgba(0,0,0,0.12)",display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap"}}>
