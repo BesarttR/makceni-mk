@@ -9,23 +9,39 @@ function getDistance(lat1, lng1, lat2, lng2) {
   return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-function playWarningSound(audioCtx) {
-  if (!audioCtx) return;
-  const beep = (freq, startTime, duration, vol=0.4) => {
-    try {
-      const osc=audioCtx.createOscillator(), gain=audioCtx.createGain();
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.type="sine"; osc.frequency.setValueAtTime(freq,startTime);
-      gain.gain.setValueAtTime(0,startTime);
-      gain.gain.linearRampToValueAtTime(vol,startTime+0.01);
-      gain.gain.linearRampToValueAtTime(0,startTime+duration);
-      osc.start(startTime); osc.stop(startTime+duration+0.05);
-    } catch(e) {}
-  };
-  const t=audioCtx.currentTime; beep(1046,t,0.1); beep(880,t+0.14,0.15);
+function getBearing(lat1, lng1, lat2, lng2) {
+  const dLng = (lng2-lng1)*Math.PI/180;
+  const y = Math.sin(dLng)*Math.cos(lat2*Math.PI/180);
+  const x = Math.cos(lat1*Math.PI/180)*Math.sin(lat2*Math.PI/180)-Math.sin(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.cos(dLng);
+  return (Math.atan2(y,x)*180/Math.PI+360)%360;
 }
 
-const WARN_DISTANCE=200, COOLDOWN_MS=8000;
+function playWarningSound(audioCtx) {
+  if (!audioCtx) return;
+  const play = () => {
+    const beep = (freq, startTime, duration, vol = 0.4) => {
+      try {
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = "sine"; osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(vol, startTime + 0.01);
+        gain.gain.linearRampToValueAtTime(0, startTime + duration);
+        osc.start(startTime); osc.stop(startTime + duration + 0.05);
+      } catch(e) { console.warn("beep failed:", e); }
+    };
+    const t = audioCtx.currentTime;
+    beep(1046, t, 0.1);
+    beep(880, t + 0.14, 0.15);
+  };
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume().then(play);
+  } else {
+    play();
+  }
+}
+
+const WARN_DISTANCE = 200, COOLDOWN_MS = 5 * 60 * 1000;
 
 function useIsMobile() {
   const [v,setV]=useState(false);
@@ -37,10 +53,31 @@ function useIsMobile() {
   return v;
 }
 
+function getArrowIcon(L, heading) {
+  const rotation = heading !== null && heading !== undefined ? heading : 0;
+  const hasHeading = heading !== null && heading !== undefined;
+  const html = hasHeading
+    ? `<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;transform:rotate(${rotation}deg);">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="18" cy="18" r="14" fill="#3B82F6" fill-opacity="0.2"/>
+          <circle cx="18" cy="18" r="8" fill="#3B82F6" stroke="white" stroke-width="2.5"/>
+          <polygon points="18,4 23,16 18,13 13,16" fill="#3B82F6" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </div>`
+    : `<div style="width:16px;height:16px;border-radius:50%;background:#3B82F6;border:3px solid #fff;box-shadow:0 0 0 6px rgba(59,130,246,0.25);"></div>`;
+  return L.divIcon({
+    html,
+    className: "",
+    iconSize: hasHeading ? [36,36] : [16,16],
+    iconAnchor: hasHeading ? [18,18] : [8,8],
+  });
+}
+
 export default function SafeCityPage() {
   const mapRef=useRef(null), leafletRef=useRef(null), clusterGroupRef=useRef(null), reportMarkerRef=useRef(null);
   const audioCtxRef=useRef(null), warnedCamerasRef=useRef({}), watchIdRef=useRef(null);
   const camerasRef=useRef([]), soundEnabledRef=useRef(true), lastSpeedRef=useRef(null);
+  const lastHeadingRef=useRef(null);
 
   const [cameras,setCameras]=useState([]);
   const [reportedCameras,setReportedCameras]=useState([]);
@@ -76,11 +113,21 @@ export default function SafeCityPage() {
     if(audioCtxRef.current.state==="suspended") audioCtxRef.current.resume();
   },[]);
 
-  const checkProximity=useCallback((lat,lng)=>{
+  const checkProximity=useCallback((lat,lng,heading)=>{
     let closest=null,closestDist=Infinity;
     camerasRef.current.forEach((cam,idx)=>{
       const dist=getDistance(lat,lng,cam.lat,cam.lng);
-      if(dist<=WARN_DISTANCE&&dist<closestDist){closestDist=dist;closest={...cam,_idx:idx};}
+      if(dist<=WARN_DISTANCE&&dist<closestDist){
+        // Direction check — only warn if camera is roughly ahead
+        if(heading!==null&&heading!==undefined){
+          const bearing=getBearing(lat,lng,cam.lat,cam.lng);
+          const diff=Math.abs(heading-bearing)%360;
+          const angleDiff=diff>180?360-diff:diff;
+          if(angleDiff>90) return; // Camera is behind or to the side, skip
+        }
+        closestDist=dist;
+        closest={...cam,_idx:idx};
+      }
     });
     if(closest){
       const now=Date.now(),lastWarned=warnedCamerasRef.current[closest._idx]||0;
@@ -89,7 +136,11 @@ export default function SafeCityPage() {
         setProximityAlert({camera:closest,distance:Math.round(closestDist)});
         if(soundEnabledRef.current) playWarningSound(audioCtxRef.current);
         setTimeout(()=>setProximityAlert(null),5000);
+      } else {
+        setProximityAlert(prev=>prev?{...prev,distance:Math.round(closestDist)}:null);
       }
+    } else {
+      setProximityAlert(null);
     }
   },[]);
 
@@ -99,19 +150,33 @@ export default function SafeCityPage() {
     setTrackingError(null);setTrackingActive(true);
     watchIdRef.current=navigator.geolocation.watchPosition(
       (pos)=>{
-        const{latitude,longitude,speed}=pos.coords;
+        const{latitude,longitude,speed,heading}=pos.coords;
         if(speed!==null&&speed>=0){const kmh=Math.round(speed*3.6);setCurrentSpeed(kmh);lastSpeedRef.current=kmh;}
         else setCurrentSpeed(lastSpeedRef.current);
+
+        // Update heading ref
+        if(heading!==null&&heading!==undefined) lastHeadingRef.current=heading;
+
         if(leafletRef.current){
           const L=leafletRef.current,map=L._map;
+          const currentHeading=heading!==null&&heading!==undefined?heading:lastHeadingRef.current;
+          const icon=getArrowIcon(L, currentHeading);
           if(!L._userMarker){
-            const icon=L.divIcon({html:`<div style="width:16px;height:16px;border-radius:50%;background:#3B82F6;border:3px solid #fff;box-shadow:0 0 0 6px rgba(59,130,246,0.25);"></div>`,className:"",iconSize:[16,16],iconAnchor:[8,8]});
             L._userMarker=L.marker([latitude,longitude],{icon,zIndexOffset:1000}).addTo(map);
-          } else L._userMarker.setLatLng([latitude,longitude]);
+          } else {
+            L._userMarker.setLatLng([latitude,longitude]);
+            L._userMarker.setIcon(icon);
+          }
+          map.flyTo([latitude,longitude], 17, {animate:true, duration:0.8});
         }
-        checkProximity(latitude,longitude);
+        checkProximity(latitude,longitude,heading!==null&&heading!==undefined?heading:lastHeadingRef.current);
       },
-      ()=>{setTrackingError("Дозволете пристап до локација.");setTrackingActive(false);setCurrentSpeed(null);},
+      (err)=>{
+        if(err.code===1) setTrackingError("Дозволете пристап до локација.");
+        else if(err.code===2) setTrackingError("Локацијата не е достапна.");
+        else if(err.code===3) setTrackingError("Истече времето за локација.");
+        setTrackingActive(false);setCurrentSpeed(null);
+      },
       {enableHighAccuracy:true,maximumAge:2000,timeout:10000}
     );
   },[initAudio,checkProximity]);
@@ -119,7 +184,7 @@ export default function SafeCityPage() {
   const stopTracking=useCallback(()=>{
     if(watchIdRef.current!==null){navigator.geolocation.clearWatch(watchIdRef.current);watchIdRef.current=null;}
     if(leafletRef.current?._userMarker){leafletRef.current._userMarker.remove();leafletRef.current._userMarker=null;}
-    setTrackingActive(false);setProximityAlert(null);setCurrentSpeed(null);lastSpeedRef.current=null;
+    setTrackingActive(false);setProximityAlert(null);setCurrentSpeed(null);lastSpeedRef.current=null;lastHeadingRef.current=null;
   },[]);
 
   useEffect(()=>{return()=>{if(watchIdRef.current!==null)navigator.geolocation.clearWatch(watchIdRef.current);};},[]);
@@ -303,7 +368,7 @@ export default function SafeCityPage() {
             </div>
           )}
 
-          {/* SPEED — bottom right when GPS active */}
+          {/* SPEED */}
           {trackingActive && (
             <div style={{position:"absolute",bottom:80,right:16,zIndex:600,background:"#FFFFFF",border:`2px solid ${getSpeedColor(currentSpeed)}`,borderRadius:16,padding:"10px 16px",minWidth:84,textAlign:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.12)",transition:"border-color 0.3s"}}>
               <div style={{fontSize:38,fontWeight:800,lineHeight:1,color:getSpeedColor(currentSpeed),letterSpacing:-1,transition:"color 0.3s"}}>{currentSpeed!==null?currentSpeed:"--"}</div>
@@ -339,7 +404,6 @@ export default function SafeCityPage() {
                     <div style={{position:"absolute",top:2,left:trackingActive?18:2,width:14,height:14,borderRadius:"50%",background:"#fff",transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
                   </div>
                 </button>
-                {/* Desktop GPS hint */}
                 {gpsHint && !isMobile && (
                   <div style={{background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:8,padding:"8px 10px",marginBottom:6,animation:"fadeUp 0.2s ease"}}>
                     <div style={{fontSize:11,fontWeight:600,color:"#15803D"}}>🔔 Ќе слушнете звук кога ќе се приближите до камера на {WARN_DISTANCE}м</div>
@@ -360,7 +424,7 @@ export default function SafeCityPage() {
             </div>
           )}
 
-          {/* MOBILE FLOATING BUTTONS — top */}
+          {/* MOBILE FLOATING BUTTONS */}
           {isMobile && (
             <div style={{position:"absolute",top:12,left:"50%",transform:"translateX(-50%)",zIndex:500,display:"flex",gap:8}}>
               <button onClick={handleGpsToggle} style={{height:40,padding:"0 14px",borderRadius:20,background:trackingActive?"#F0FDF4":"#fff",border:`2px solid ${trackingActive?"#86EFAC":"#E8E5DE"}`,color:trackingActive?"#15803D":"#4A4640",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 2px 12px rgba(0,0,0,0.12)",display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap"}}>
@@ -375,35 +439,30 @@ export default function SafeCityPage() {
             </div>
           )}
 
-          {/* MOBILE GPS HINT TOAST */}
           {isMobile && gpsHint && (
             <div style={{position:"absolute",top:62,left:"50%",transform:"translateX(-50%)",zIndex:500,background:"#1C1917",borderRadius:10,padding:"9px 16px",fontSize:12,fontWeight:600,color:"#fff",whiteSpace:"nowrap",animation:"fadeDown 0.2s ease",boxShadow:"0 4px 16px rgba(0,0,0,0.25)"}}>
               🔔 Звук при приближување до камера на {WARN_DISTANCE}м
             </div>
           )}
 
-          {/* MOBILE GPS error */}
           {isMobile && trackingError && (
             <div style={{position:"absolute",top:gpsHint?100:62,left:"50%",transform:"translateX(-50%)",zIndex:500,background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:10,padding:"8px 14px",fontSize:11,color:"#DC2626",fontWeight:600,whiteSpace:"nowrap"}}>
               ⚠ {trackingError}
             </div>
           )}
 
-          {/* REPORT MODE banner */}
           {reportMode && (
             <div style={{position:"absolute",top:isMobile?62:16,left:"50%",transform:"translateX(-50%)",zIndex:600,background:"#F97316",borderRadius:12,padding:"10px 20px",boxShadow:"0 4px 20px rgba(249,115,22,0.4)",animation:"fadeDown 0.2s ease",whiteSpace:"nowrap"}}>
               <div style={{fontSize:13,fontWeight:700,color:"#fff",textAlign:"center"}}>Кликни на мапата каде се наоѓа камерата</div>
             </div>
           )}
 
-          {/* REPORT SENT */}
           {reportSent && (
             <div style={{position:"absolute",top:isMobile?62:16,left:"50%",transform:"translateX(-50%)",zIndex:600,background:"#16A34A",borderRadius:12,padding:"10px 20px",boxShadow:"0 4px 20px rgba(22,163,74,0.4)",animation:"fadeDown 0.2s ease",whiteSpace:"nowrap"}}>
               <div style={{fontSize:13,fontWeight:700,color:"#fff"}}>✓ Камерата е пријавена — благодарам!</div>
             </div>
           )}
 
-          {/* REPORT PIN FORM */}
           {reportPin && !reportSent && (
             <div style={{position:"absolute",bottom:0,left:0,right:0,zIndex:500,background:"#FFFFFF",borderRadius:isMobile?"20px 20px 0 0":18,padding:isMobile?"20px 16px 36px":"20px 22px",boxShadow:"0 -4px 24px rgba(0,0,0,0.1)",animation:isMobile?"slideUp 0.25s ease":"fadeUp 0.2s ease"}}>
               {isMobile && <div style={{width:36,height:4,background:"#E8E5DE",borderRadius:2,margin:"0 auto 14px"}}/>}
@@ -428,7 +487,6 @@ export default function SafeCityPage() {
             </div>
           )}
 
-          {/* SELECTED CAMERA CARD */}
           {selectedCamera && !reportPin && (
             <div style={{position:"absolute",bottom:isMobile?0:24,left:isMobile?0:"50%",right:isMobile?0:"auto",transform:isMobile?"none":"translateX(-50%)",zIndex:500,background:"#FFFFFF",borderRadius:isMobile?"20px 20px 0 0":18,padding:isMobile?"16px 16px 36px":"20px 22px",boxShadow:"0 -4px 24px rgba(0,0,0,0.1)",animation:isMobile?"slideUp 0.25s ease":"fadeUp 0.2s ease",minWidth:isMobile?"auto":300,maxWidth:isMobile?"100%":400}}>
               {isMobile && <div style={{width:36,height:4,background:"#E8E5DE",borderRadius:2,margin:"0 auto 14px"}}/>}
