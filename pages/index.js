@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import Head from "next/head";
+import Image from "next/image";
 
+<Image 
+  src="/logos/makpetrol.png" 
+  alt="makpetrol" 
+  width={100} 
+  height={50} 
+/>
 const FUEL_COLORS = {
   benzin95: { bg: "#1C1917", text: "#fff", accent: "#F87171", spark: "#F87171" },
   benzin98: { bg: "#1C1917", text: "#fff", accent: "#FCA5A5", spark: "#FCA5A5" },
@@ -39,6 +46,25 @@ const FALLBACK_HISTORY = {
   ekstra:   { "7д": [87.5,88.0,88.0,89.0,89.0,89.5,89.5], "30д": [82,83,83,84,84,85,85,86,86,87,87,88,88,88,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89.5], "6м": [73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,89,89.5,89.5,89.5,89.5,89.5,89.5] },
   mazut:    { "7д": [46.5,47.0,47.0,47.5,47.5,47.5,47.5], "30д": [43,43,44,44,44,45,45,45,46,46,46,46,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47.5], "6м": [38,39,39,40,40,41,41,42,42,43,43,44,44,45,45,46,46,47,47,47.5,47.5,47.5,47.5,47.5] },
 };
+
+const FALLBACK_STATIONS = [
+  { key: "makpetrol", name: "Makpetrol",
+    logo: "/logos/makpetrol.png",
+    prices: { benzin95: 84.5, benzin98: 86.5, dizel: 93.5, lpg: 59.0 } },
+  { key: "okta", name: "Okta",
+    logo: "/logos/okta.png",
+    prices: { benzin95: 84.5, benzin98: 86.5, dizel: 92.5, lpg: 59.0 } },
+  { key: "lukoil", name: "Lukoil",
+    logo: "/logos/lukoil.png",
+    prices: { benzin95: 84.5, benzin98: 86.5, dizel: 93.5, lpg: 57.0 } },
+];
+
+const STATION_FUEL_LABELS = [
+  { key: "benzin95", label: "Бензин 95",  color: "#F87171" },
+  { key: "benzin98", label: "Бензин 98+", color: "#FCA5A5" },
+  { key: "dizel",    label: "Дизел",       color: "#86EFAC" },
+  { key: "lpg",      label: "Плин LPG",    color: "#93C5FD" },
+];
 
 function useWindowWidth() {
   const [w, setW] = useState(undefined);
@@ -247,10 +273,9 @@ function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading }) {
           })}
         </div>
       </div>
-      {/* Swipe hint */}
-<div style={{ textAlign: "center", marginTop: 8, marginBottom: 2 }}>
-  <span style={{ fontSize: 14, color: C.muted, fontWeight: 500 }}>← Повлечи лево/десно →</span>
-</div>
+      <div style={{ textAlign: "center", marginTop: 8, marginBottom: 2 }}>
+        <span style={{ fontSize: 14, color: C.muted, fontWeight: 500 }}>← Повлечи лево/десно →</span>
+      </div>
       <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 14 }}>
         {fuelData.map((_, i) => (
           <button key={i} onClick={() => onSelect(i)} style={{ width: i === activeIdx ? 22 : 6, height: 6, borderRadius: 3, border: "none", cursor: "pointer", padding: 0, background: i === activeIdx ? C.orange : C.borderMid, transition: "all 0.3s ease" }} />
@@ -544,8 +569,8 @@ function MobileDrawer({ open, close, loading, timeStr }) {
       <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "80%", maxWidth: 300, background: C.surface, zIndex: 999, boxShadow: "-12px 0 48px rgba(0,0,0,0.18)", transform: open ? "translateX(0)" : "translateX(100%)", transition: "transform 0.32s cubic-bezier(0.16,1,0.3,1)", display: "flex", flexDirection: "column", overflowY: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px 14px", borderBottom: `1px solid ${C.border}` }}>
           <a href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
-  <img src="/logo.png" alt="makceni.mk" style={{ height: 32, width: "auto" }} />
-</a>
+            <img src="/logo.png" alt="makceni.mk" style={{ height: 32, width: "auto" }} />
+          </a>
           <button onClick={close} style={{ width: 34, height: 34, borderRadius: 9, border: `1px solid ${C.border}`, background: C.surface2, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", color: C.text }}>✕</button>
         </div>
         <div style={{ padding: "10px 20px", background: C.surface2, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 7 }}>
@@ -568,7 +593,8 @@ function MobileDrawer({ open, close, loading, timeStr }) {
     </>
   );
 }
-// ── Berza Component — paste this into index.js ────────
+
+// ── Berza Component ────────────────────────────────────
 function Berza() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -625,7 +651,6 @@ function Berza() {
 
   return (
     <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden" }}>
-      {/* Header */}
       <div style={{ padding: "16px 20px", background: C.surface2, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Берза</div>
@@ -638,13 +663,13 @@ function Berza() {
           <span style={{ fontSize: 11, fontWeight: 700, color: C.green }}>Во живо</span>
         </div>
       </div>
-
       <Section emoji="⛽" title="Нафта"  items={oil}    border={true} />
       <Section emoji="🪙" title="Метали" items={metals} border={true} />
       <Section emoji="₿"  title="Крипто" items={crypto} border={false} />
     </div>
   );
 }
+
 // ── Alert Banner ───────────────────────────────────────
 function AlertBanner() {
   const [email, setEmail] = useState("");
@@ -691,30 +716,21 @@ function Calculator({ fuelData }) {
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 5 }}>Километри</div>
             <input
-              type="number"
-              inputMode="numeric"
-              placeholder="100"
-              value={km}
+              type="number" inputMode="numeric" placeholder="100" value={km}
               onChange={e => setKm(e.target.value)}
               onFocus={e => { if (e.target.value === "100") setKm(""); }}
               onBlur={e => { if (e.target.value === "") setKm("100"); }}
-              onKeyDown={blockInvalid}
-              style={inp}
+              onKeyDown={blockInvalid} style={inp}
             />
           </div>
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 5 }}>л / 100км</div>
             <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-              placeholder="7.5"
-              value={cons}
+              type="number" inputMode="decimal" step="0.1" placeholder="7.5" value={cons}
               onChange={e => setCons(e.target.value)}
               onFocus={e => { if (e.target.value === "7.5") setCons(""); }}
               onBlur={e => { if (e.target.value === "") setCons("7.5"); }}
-              onKeyDown={blockInvalid}
-              style={inp}
+              onKeyDown={blockInvalid} style={inp}
             />
           </div>
         </div>
@@ -757,6 +773,156 @@ function NewsCard({ n, i }) {
       </div>
       <div style={{ fontSize: 14, fontWeight: 600, color: C.text, lineHeight: 1.55 }}>{n.title}</div>
     </a>
+  );
+}
+
+// ── Station Prices Table ───────────────────────────────
+function StationPricesTable({ isMobile }) {
+  const [stations, setStations] = useState(FALLBACK_STATIONS);
+  const [loading, setLoading] = useState(true);
+  const [updatedAt, setUpdatedAt] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/station-prices")
+      .then(r => r.json())
+      .then(d => {
+        if (d.stations && d.stations.length > 0) setStations(d.stations);
+        if (d.updatedAt) setUpdatedAt(d.updatedAt);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const timeStr = updatedAt
+    ? new Date(updatedAt).toLocaleTimeString("mk-MK", { hour: "2-digit", minute: "2-digit" })
+    : null;
+
+  // Mobile: card per station with 2x2 price grid
+  if (isMobile) {
+    return (
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden" }}>
+        <div style={{ padding: "16px 20px", background: C.surface2, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>⛽ Цени на пумпа</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>
+              {timeStr ? `Ажурирано ${timeStr}` : "Цени по бензински"}
+            </div>
+          </div>
+          {loading
+            ? <div style={{ width: 7, height: 7, borderRadius: "50%", border: `2px solid ${C.orange}`, borderTopColor: "transparent", animation: "spin 0.7s linear infinite" }} />
+            : <div style={{ display: "flex", alignItems: "center", gap: 5, background: C.greenBg, border: `1px solid ${C.greenBdr}`, borderRadius: 20, padding: "3px 9px" }}>
+                <LiveDot />
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.green }}>Во живо</span>
+              </div>
+          }
+        </div>
+        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+          {stations.map(station => (
+            <div key={station.key} style={{ background: C.surface2, border: `1px solid ${C.border}`, borderRadius: 13, overflow: "hidden" }}>
+              <div style={{ padding: "11px 14px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 8 }}>
+            <img src={station.logo} alt={station.name}
+  style={{ height: 28, width: "auto", maxWidth: 90, objectFit: "contain" }}
+  onError={e => { e.currentTarget.style.display = "none"; }}
+/>
+             </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                {STATION_FUEL_LABELS.map((f, fi) => (
+                  <div key={f.key} style={{ padding: "10px 14px", borderRight: fi % 2 === 0 ? `1px solid ${C.border}` : "none", borderBottom: fi < 2 ? `1px solid ${C.border}` : "none" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: f.color, display: "inline-block", flexShrink: 0 }} />
+                      <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4 }}>{f.label}</div>
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>
+                      {loading ? "—" : station.prices[f.key] != null ? station.prices[f.key].toFixed(1) : "—"}
+                      <span style={{ fontSize: 10, fontWeight: 500, color: C.muted, marginLeft: 2 }}>ден</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ padding: "8px 20px 12px", fontSize: 11, color: C.muted, borderTop: `1px solid ${C.border}` }}>
+          ⓘ Цените може да се разликуваат до 3 ден во однос на регулираните цени од РКЕ.
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop/Tablet: full table
+  return (
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden" }}>
+      <div style={{ padding: "16px 20px", background: C.surface2, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>⛽ Цени на пумпа</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>
+            {timeStr ? `Ажурирано ${timeStr} · gorivo.mk` : "Цени по бензински во Македонија"}
+          </div>
+        </div>
+        {loading
+          ? <div style={{ width: 7, height: 7, borderRadius: "50%", border: `2px solid ${C.orange}`, borderTopColor: "transparent", animation: "spin 0.7s linear infinite" }} />
+          : <div style={{ display: "flex", alignItems: "center", gap: 5, background: C.greenBg, border: `1px solid ${C.greenBdr}`, borderRadius: 20, padding: "3px 9px" }}>
+              <LiveDot />
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.green }}>Во живо</span>
+            </div>
+        }
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ background: C.surface2 }}>
+              <th style={{ padding: "12px 20px", textAlign: "left", fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.8, borderBottom: `1px solid ${C.border}` }}>
+                Бензинска
+              </th>
+              {STATION_FUEL_LABELS.map(f => (
+                <th key={f.key} style={{ padding: "12px 20px", textAlign: "right", fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.8, borderBottom: `1px solid ${C.border}` }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: f.color, display: "inline-block" }} />
+                    {f.label}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {stations.map((station, si) => (
+              <tr
+                key={station.key}
+                style={{ borderBottom: si < stations.length - 1 ? `1px solid ${C.border}` : "none", transition: "background 0.15s", cursor: "default" }}
+                onMouseEnter={e => e.currentTarget.style.background = C.surface2}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                <td style={{ padding: "16px 20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+               <img src={station.logo} alt={station.name}
+  style={{ height: 32, width: "auto", maxWidth: 110, objectFit: "contain" }}
+  onError={e => { e.currentTarget.style.display = "none"; }}
+/>
+                  </div>
+                </td>
+                {STATION_FUEL_LABELS.map(f => (
+                  <td key={f.key} style={{ padding: "16px 20px", textAlign: "right" }}>
+                    {loading ? (
+                      <span style={{ fontSize: 18, fontWeight: 800, color: C.muted }}>—</span>
+                    ) : (
+                      <>
+                        <span style={{ fontSize: 20, fontWeight: 800, color: C.text }}>
+                          {station.prices[f.key] != null ? station.prices[f.key].toFixed(1) : "—"}
+                        </span>
+                        <span style={{ fontSize: 11, color: C.muted, marginLeft: 4 }}>ден</span>
+                      </>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ padding: "8px 20px 12px", fontSize: 11, color: C.muted, borderTop: `1px solid ${C.border}` }}>
+        ⓘ Цените може да се разликуваат до 3 ден во однос на регулираните цени од РКЕ.
+      </div>
+    </div>
   );
 }
 
@@ -848,8 +1014,8 @@ export default function Home() {
         <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, background: "rgba(248,247,244,0.96)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}` }}>
           <div style={{ maxWidth: 1180, margin: "0 auto", padding: `0 ${px}`, height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <a href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", transition: "opacity 0.15s" }} onMouseEnter={e => e.currentTarget.style.opacity = "0.75"} onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
-  <img src="/logo.png" alt="makceni.mk" style={{ height: isMobile ? 152 : 158, width: "auto", display: "block" }} />
-</a>
+              <img src="/logo.png" alt="makceni.mk" style={{ height: isMobile ? 152 : 158, width: "auto", display: "block" }} />
+            </a>
             {!isMobile && (
               <nav style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 {[["Цени", "#ceni"], ["Калкулатор", "#calculator"], ["Историја", "#history"], ["Берза", "#berza"], ["Вести", "#news"]].map(([l, href]) => (
@@ -884,7 +1050,7 @@ export default function Home() {
           <div style={{ textAlign: "center", marginBottom: isMobile ? 24 : 44, opacity: mounted ? 1 : 0, transform: mounted ? "none" : "translateY(14px)", transition: "all 0.6s cubic-bezier(0.16,1,0.3,1)" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 100, padding: "4px 14px 4px 6px", marginBottom: 14 }}>
               <span style={{ background: C.orange, color: "#fff", borderRadius: 100, padding: "2px 10px", fontSize: 10, fontWeight: 800, letterSpacing: 0.8 }}>ДЕНЕС</span>
-             <span style={{ fontSize: 12, color: C.muted, fontWeight: 500 }}>{mounted ? today : ""}</span>
+              <span style={{ fontSize: 12, color: C.muted, fontWeight: 500 }}>{mounted ? today : ""}</span>
             </div>
             <h1 style={{ fontSize: isMobile ? "24px" : "clamp(28px, 4vw, 48px)", fontWeight: 800, letterSpacing: isMobile ? -1 : -2, lineHeight: 1.08, color: C.text }}>
               Цени на горива · <span style={{ color: C.orange }}>Македонија</span>
@@ -920,6 +1086,15 @@ export default function Home() {
         </div>
 
         <main style={{ position: "relative", zIndex: 1, maxWidth: 1180, margin: "0 auto", padding: `36px ${px} 80px` }}>
+
+          {/* ── Station Prices Table (NEW) ── */}
+          <div style={{ marginBottom: 36 }}>
+            <StationPricesTable isMobile={isMobile} />
+          </div>
+
+          <div style={{ height: 1, background: C.border, marginBottom: 36 }} />
+
+          {/* ── Бензински + SafeCity cards ── */}
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14, marginBottom: 40 }}>
             <a href="/mapa" style={{ textDecoration: "none", display: "block", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden", transition: "all 0.2s ease" }}
               onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = "#FDE68A"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.08)"; }}
@@ -1004,7 +1179,6 @@ export default function Home() {
             <a href="/" style={{ fontWeight: 800, fontSize: 16, color: C.orange, textDecoration: "none" }}>makceni.mk</a>
             <div style={{ fontSize: 12, color: C.muted }}>Цените се информативни и може да се разликуваат на точката на продажба.</div>
             <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-              
               {[{ label: "Услови", href: "#" }, { label: "Приватност", href: "#" }, { label: "Контакт", href: "mailto:besartr1995@gmail.com" }].map(l => (
                 <a key={l.label} href={l.href} style={{ fontSize: 12, color: C.muted, cursor: "pointer", textDecoration: "none" }} onMouseEnter={e => e.currentTarget.style.color = C.orange} onMouseLeave={e => e.currentTarget.style.color = C.muted}>{l.label}</a>
               ))}
