@@ -197,9 +197,12 @@ export default function BenzinskiPage() {
     document.head.appendChild(cssLink);
     const script = document.createElement("script");
     script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-    script.onload = () => {
-      const L = window.L;
-      const map = L.map(mapRef.current, { center:[41.6086,21.7453], zoom:8, zoomControl:false });
+   script.onload = () => {
+  const L = window.L;
+  const map = L.map(mapRef.current, { center:[41.6086,21.7453], zoom:8, zoomControl:false });
+  // Fix for mobile: force recalculate size after a tick
+  setTimeout(() => map.invalidateSize(), 100);
+  setTimeout(() => map.invalidateSize(), 500);
       L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
         { subdomains:"abcd", maxZoom:19 }).addTo(map);
       L.control.zoom({ position:"bottomright" }).addTo(map);
@@ -519,7 +522,7 @@ export default function BenzinskiPage() {
           </div>
 
           {/* MAP */}
-          <div style={{ flex:1, position:"relative" }}
+          <div style={{ flex:1, position:"relative", minWidth:0, overflow:"hidden" }}
             onClick={() => { if(isMobile && sidebarOpen) setSidebarOpen(false); }}>
 
             {/* Loading pill */}
@@ -546,8 +549,7 @@ export default function BenzinskiPage() {
                 ☰ <span>{filtered.length} станици</span>
               </button>
             )}
-
-            <div ref={mapRef} style={{ width:"100%", height:"100%" }}/>
+            <div ref={mapRef} style={{ width:"100%", height:"100%", minWidth:0, display:"block" }}/>
 
             {/* Station popup */}
             {selectedStation && (
