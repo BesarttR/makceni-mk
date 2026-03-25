@@ -1,13 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import Head from "next/head";
-import Image from "next/image";
 
-<Image 
-  src="/logos/makpetrol.png" 
-  alt="makpetrol" 
-  width={100} 
-  height={50} 
-/>
 const FUEL_COLORS = {
   benzin95: { bg: "#1C1917", text: "#fff", accent: "#F87171", spark: "#F87171" },
   benzin98: { bg: "#1C1917", text: "#fff", accent: "#FCA5A5", spark: "#FCA5A5" },
