@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@next/third-parties": "^16.2.1",
     "@vercel/analytics": "^2.0.1",
     "cheerio": "^1.2.0",
     "leaflet": "^1.9.4",
