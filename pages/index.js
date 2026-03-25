@@ -1172,7 +1172,7 @@ export default function Home() {
             <a href="/" style={{ fontWeight: 800, fontSize: 16, color: C.orange, textDecoration: "none" }}>makceni.mk</a>
             <div style={{ fontSize: 12, color: C.muted }}>Цените се информативни и може да се разликуваат на точката на продажба.</div>
             <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-              {[{ label: "Услови", href: "#" }, { label: "Приватност", href: "#" }, { label: "Контакт", href: "mailto:besartr1995@gmail.com" }].map(l => (
+              {[{ label: "Услови", href: "/uslovi" }, { label: "Приватност", href: "/privatnost" }, { label: "Контакт", href: "mailto:besartr1995@gmail.com" }].map(l => (
                 <a key={l.label} href={l.href} style={{ fontSize: 12, color: C.muted, cursor: "pointer", textDecoration: "none" }} onMouseEnter={e => e.currentTarget.style.color = C.orange} onMouseLeave={e => e.currentTarget.style.color = C.muted}>{l.label}</a>
               ))}
             </div>
