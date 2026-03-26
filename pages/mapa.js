@@ -100,48 +100,6 @@ const FALLBACK_STATIONS = [
   { id:50, lat:41.7856, lng:20.9256, brand:"okta",      name:"OKTA Гостивар",              addr:"Гостивар",                   city:"Гостивар",  fuels:["Бензин 95","Дизел"] },
 ];
 
-// ─── Overpass fetch ───────────────────────────────────────────────────────────
-async function fetchOverpassStations() {
-  const bbox = "40.8,20.4,42.4,23.1";
-  const query = `[out:json][timeout:60];(node["amenity"="fuel"](${bbox});way["amenity"="fuel"](${bbox});relation["amenity"="fuel"](${bbox}););out center;`;
-  const endpoints = [
-    "https://overpass-api.de/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
-  ];
-  for (const url of endpoints) {
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: "data=" + encodeURIComponent(query),
-        signal: AbortSignal.timeout(65000),
-      });
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (!data.elements || data.elements.length === 0) continue;
-      return data.elements.map(el => {
-        const tags = el.tags || {};
-        let lat, lng;
-        if (el.type === "node")   { lat = el.lat; lng = el.lon; }
-        else if (el.center)       { lat = el.center.lat; lng = el.center.lon; }
-        else return null;
-        if (!lat || !lng) return null;
-        return {
-          id: el.id, lat, lng,
-          brand: detectBrand(tags),
-          name:  tags.name || tags["name:mk"] || tags["name:en"] || "Бензинска",
-          addr:  [tags["addr:street"], tags["addr:city"]].filter(Boolean).join(", ") || tags.city || "",
-          city:  tags["addr:city"] || tags.city || "",
-          fuels: parseFuels(tags),
-        };
-      }).filter(Boolean);
-    } catch (err) {
-      console.warn(`Overpass failed on ${url}:`, err);
-    }
-  }
-  throw new Error("All Overpass mirrors failed");
-}
-
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const C = {
   bg:"#FAF9F7", surface:"#FFFFFF", surface2:"#F5F4F1", surface3:"#EEECEA",
@@ -197,12 +155,11 @@ export default function BenzinskiPage() {
     document.head.appendChild(cssLink);
     const script = document.createElement("script");
     script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-   script.onload = () => {
-  const L = window.L;
-  const map = L.map(mapRef.current, { center:[41.6086,21.7453], zoom:8, zoomControl:false });
-  // Fix for mobile: force recalculate size after a tick
-  setTimeout(() => map.invalidateSize(), 100);
-  setTimeout(() => map.invalidateSize(), 500);
+    script.onload = () => {
+      const L = window.L;
+      const map = L.map(mapRef.current, { center:[41.6086,21.7453], zoom:8, zoomControl:false });
+      setTimeout(() => map.invalidateSize(), 100);
+      setTimeout(() => map.invalidateSize(), 500);
       L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
         { subdomains:"abcd", maxZoom:19 }).addTo(map);
       L.control.zoom({ position:"bottomright" }).addTo(map);
@@ -213,18 +170,41 @@ export default function BenzinskiPage() {
     return () => { leafletRef.current?.map?.remove(); };
   }, []);
 
-  // ── Fetch stations ────────────────────────────────────────────────────────
+  // ── Fetch stations from /api/stations (cached server-side for 24h) ────────
   useEffect(() => {
     (async () => {
+        if (typeof window === "undefined") return;
       setLoading(true);
-      setLoadMsg("🔄 Вчитување од OpenStreetMap...");
+      setLoadMsg("🔄 Вчитување бензински...");
       let stations;
       try {
-        stations = await fetchOverpassStations();
-        if (!stations || stations.length === 0) throw new Error("empty");
+        const res = await fetch("/api/stations");
+        if (!res.ok) throw new Error("API error");
+        const data = await res.json();
+        if (!data.stations || data.stations.length === 0) throw new Error("empty");
+
+        // Parse raw OSM elements into station objects
+        stations = data.stations.map(el => {
+          const tags = el.tags || {};
+          let lat, lng;
+          if (el.type === "node")        { lat = el.lat;        lng = el.lon; }
+          else if (el.center)            { lat = el.center.lat; lng = el.center.lon; }
+          else return null;
+          if (!lat || !lng) return null;
+          return {
+            id:    el.id,
+            lat,   lng,
+            brand: detectBrand(tags),
+            name:  tags.name || tags["name:mk"] || tags["name:en"] || "Бензинска",
+            addr:  [tags["addr:street"], tags["addr:city"]].filter(Boolean).join(", ") || tags.city || "",
+            city:  tags["addr:city"] || tags.city || "",
+            fuels: parseFuels(tags),
+          };
+        }).filter(Boolean);
+
         setLoadMsg(`✓ Вчитани ${stations.length} станици`);
       } catch {
-        setLoadMsg("⚠️ OSM недостапен — локални податоци");
+        setLoadMsg("⚠️ Недостапно — локални податоци");
         await new Promise(r => setTimeout(r, 600));
         stations = FALLBACK_STATIONS;
       }
@@ -322,7 +302,7 @@ export default function BenzinskiPage() {
   const activeBrands    = [...new Set(allStations.map(s => s.brand))].sort();
   const cities          = new Set(allStations.map(s => s.city).filter(Boolean));
 
-  // ── Sidebar content (shared between mobile drawer and desktop panel) ──────
+  // ── Sidebar content ───────────────────────────────────────────────────────
   const SidebarContent = () => (
     <>
       <div style={{ padding:"14px 14px 10px", borderBottom:`1px solid ${C.border}` }}>
@@ -459,7 +439,6 @@ export default function BenzinskiPage() {
         <header style={{ height:52, flexShrink:0, background:C.surface, borderBottom:`1px solid ${C.border}`,
           display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px", zIndex:1000 }}>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            {/* Hamburger — mobile only */}
             {isMobile && (
               <button onClick={()=>setSidebarOpen(o=>!o)} style={{
                 width:34, height:34, borderRadius:8, border:`1px solid ${C.border}`,
@@ -501,7 +480,7 @@ export default function BenzinskiPage() {
             }}/>
           )}
 
-          {/* SIDEBAR — desktop: static, mobile: slide-in overlay */}
+          {/* SIDEBAR */}
           <div style={{
             width: 280,
             background: C.surface,
@@ -535,7 +514,7 @@ export default function BenzinskiPage() {
               </div>
             )}
 
-            {/* Mobile list toggle button — shown when sidebar is closed */}
+            {/* Mobile list toggle */}
             {isMobile && !sidebarOpen && (
               <button onClick={()=>setSidebarOpen(true)} style={{
                 position:"absolute", top:14, left:14, zIndex:600,
@@ -549,6 +528,7 @@ export default function BenzinskiPage() {
                 ☰ <span>{filtered.length} станици</span>
               </button>
             )}
+
             <div ref={mapRef} style={{ width:"100%", height:"100%", minWidth:0, display:"block" }}/>
 
             {/* Station popup */}
