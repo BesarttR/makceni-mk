@@ -276,7 +276,7 @@ function PriceHistory({ fuelData, isMobile, tr, lang }) {
   const chartRef = useRef(null);
 const localeMap = { mk: "mk-MK", sq: "sq-AL", en: "en-GB", tr: "tr-TR" };
 const locale = localeMap[lang] || "mk-MK";
-const periods = ["7д", "30д", "6м"];
+const periods = [tr("home.priceHistory.period7d"), tr("home.priceHistory.period30d"), tr("home.priceHistory.period6m")];
   const fuel = fuelData.find(f => f.key === activeFuel) || fuelData[0];
   const fc = FUEL_COLORS[activeFuel] || FUEL_COLORS.mazut;
 

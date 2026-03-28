@@ -267,6 +267,9 @@ const translations = {
       },
 
       priceHistory: {
+        period7d: "7д", 
+        period30d: "30д", 
+        period6m: "6м",
         title:       "Историја на цени",
         subtitleReal:"Реални податоци ",
         subtitleFallback: "Движење на цените низ времето",
@@ -625,6 +628,9 @@ const translations = {
       },
 
       priceHistory: {
+        period7d: "7d", 
+        period30d: "30d", 
+        period6m: "6m",
         title:       "Historia e çmimeve",
         subtitleReal:"Të dhëna reale",
         subtitleFallback: "Lëvizja e çmimeve me kalimin e kohës",
@@ -980,6 +986,9 @@ mapa: {
       },
 
       priceHistory: {
+        period7d: "7d", 
+        period30d: "30d", 
+        period6m: "6m",
         title:       "Price History",
         subtitleReal:"Real data ",
         subtitleFallback: "Price movement over time",
@@ -1337,6 +1346,9 @@ mapa: {
       },
 
       priceHistory: {
+        period7d: "7g", 
+        period30d: "30g",
+        period6m: "6a",
         title:       "Fiyat Geçmişi",
         subtitleReal:"Gerçek veriler",
         subtitleFallback: "Zamanla fiyat hareketi",
