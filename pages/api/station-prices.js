@@ -1,6 +1,7 @@
 // pages/station-prices.js
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useLanguage, LanguageSwitcher } from "../../translations";
 
 const FALLBACK_STATIONS = [
   { key: "makpetrol", name: "Makpetrol", logo: "/logos/makpetrol.png", prices: { benzin95: 84.5, benzin98: 86.5, dizel: 93.5, lpg: 59.0 } },
@@ -8,14 +9,19 @@ const FALLBACK_STATIONS = [
   { key: "lukoil",    name: "Lukoil",    logo: "/logos/lukoil.png",    prices: { benzin95: 84.5, benzin98: 86.5, dizel: 93.5, lpg: 57.0 } },
 ];
 
-// Utility to parse prices
+const LANGUAGES = [
+  { code: "en", label: "EN" },
+  { code: "mk", label: "МК" },
+  { code: "sq", label: "SQ" },
+  { code: "tr", label: "TR" },
+];
+
 function parsePrice(str) {
   if (!str) return null;
   const num = parseFloat(str.replace(",", ".").replace(/[^\d.]/g, ""));
   return isNaN(num) ? null : num;
 }
 
-// Scrape gorivo.mk HTML
 async function scrapeGorivo() {
   const res = await fetch("https://gorivo.mk/", {
     headers: { "User-Agent": "Mozilla/5.0", "Accept": "text/html", "Accept-Language": "mk,en;q=0.5" },
@@ -69,9 +75,9 @@ async function scrapeGorivo() {
   return stations;
 }
 
-// Main component
 export default function StationPrices() {
   const [stations, setStations] = useState([]);
+  const { tr, lang, setLang } = useLanguage();
 
   useEffect(() => {
     async function fetchPrices() {
@@ -88,22 +94,43 @@ export default function StationPrices() {
 
   return (
     <main style={{ padding: "2rem" }}>
-      <h1 style={{ marginBottom: "1rem" }}>Fuel Prices</h1>
+      {/* Language switcher */}
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", justifyContent: "flex-end" }}>
+        {LANGUAGES.map(l => (
+          <button
+            key={l.code}
+            onClick={() => setLang(l.code)}
+            style={{
+              padding: "0.25rem 0.6rem",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontWeight: lang === l.code ? "bold" : "normal",
+              backgroundColor: lang === l.code ? "#333" : "#fff",
+              color: lang === l.code ? "#fff" : "#333",
+            }}
+          >
+            {l.label}
+          </button>
+        ))}
+      </div>
+
+      <h1 style={{ marginBottom: "1rem" }}>{tr("stationPrices.title")}</h1>
+
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr style={{ backgroundColor: "#f1f1f1" }}>
-            <th style={{ padding: "0.5rem", textAlign: "left" }}>Station</th>
-            <th style={{ padding: "0.5rem" }}>Benzin 95</th>
-            <th style={{ padding: "0.5rem" }}>Benzin 98</th>
-            <th style={{ padding: "0.5rem" }}>Dizel</th>
-            <th style={{ padding: "0.5rem" }}>LPG</th>
+            <th style={{ padding: "0.5rem", textAlign: "left" }}>{tr("stationPrices.station")}</th>
+            <th style={{ padding: "0.5rem" }}>{tr("stationPrices.benzin95")}</th>
+            <th style={{ padding: "0.5rem" }}>{tr("stationPrices.benzin98")}</th>
+            <th style={{ padding: "0.5rem" }}>{tr("stationPrices.dizel")}</th>
+            <th style={{ padding: "0.5rem" }}>{tr("stationPrices.lpg")}</th>
           </tr>
         </thead>
         <tbody>
           {stations.map(station => (
             <tr key={station.key} style={{ borderBottom: "1px solid #ccc" }}>
               <td style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0.5rem" }}>
-                {/* Fixed box with padding so all logos look uniform */}
                 <div style={{
                   width: 80,
                   height: 40,

@@ -103,17 +103,16 @@ export default async function handler(req, res) {
 
   let brent = null, wti = null, gold = null, silver = null, crypto = null;
 
-  // Oil — needs 13s delay between requests (Alpha Vantage 5req/min limit)
-try {
-  [brent, wti] = await Promise.all([
-    fetchOil("BRENT"),
-    fetchOil("WTI"),
-  ]);
-  console.log(`✓ Oil: Brent $${brent.price}, WTI $${wti.price}`);
-} catch (err) {
-  console.warn("✗ Oil failed:", err.message);
-}
-  // Metals + Crypto in parallel — both instant, no rate limits
+  try {
+    [brent, wti] = await Promise.all([
+      fetchOil("BRENT"),
+      fetchOil("WTI"),
+    ]);
+    console.log(`✓ Oil: Brent $${brent.price}, WTI $${wti.price}`);
+  } catch (err) {
+    console.warn("✗ Oil failed:", err.message);
+  }
+
   try {
     [gold, silver, crypto] = await Promise.all([
       fetchMetal("XAU"),
@@ -133,7 +132,7 @@ try {
         usd: brent?.price ?? 101.0,
         mkd: Math.round((brent?.price ?? 101.0) * USD_TO_MKD),
         change: brent?.change ?? 0,
-        unit: "барел",
+        unit: "barrel",
         date: brent?.date,
       },
       {
@@ -141,25 +140,25 @@ try {
         usd: wti?.price ?? 93.0,
         mkd: Math.round((wti?.price ?? 93.0) * USD_TO_MKD),
         change: wti?.change ?? 0,
-        unit: "барел",
+        unit: "barrel",
         date: wti?.date,
       },
     ],
     metals: [
       {
-        name: "Злато",
+        name: "gold",
         usd: gold?.price ?? 96.46,
         mkd: Math.round((gold?.price ?? 96.46) * USD_TO_MKD),
         change: gold?.change ?? 0,
-        unit: "грам",
+        unit: "gram",
         date: gold?.date,
       },
       {
-        name: "Сребро",
+        name: "silver",
         usd: silver?.price ?? 1.06,
         mkd: Math.round((silver?.price ?? 1.06) * USD_TO_MKD),
         change: silver?.change ?? 0,
-        unit: "грам",
+        unit: "gram",
         date: silver?.date,
       },
     ],
