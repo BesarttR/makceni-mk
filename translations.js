@@ -662,7 +662,7 @@ berza: {
       },
 
       share: {
-        button:    "Ndaj",
+        button:    "Shpërndaj",
         viber:     "Viber",
         whatsapp:  "WhatsApp",
         copy:      "Kopjo",
