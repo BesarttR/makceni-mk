@@ -302,11 +302,29 @@ export default function SafeCityPage() {
 
   return (
     <>
-      <Head>
-        <title>{tr("safecity.pageTitle")}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-        <style>{`
+     <Head>
+  <title>Safe City Камери во Македонија — Радар Предупредување | МакЦени</title>
+  <meta name="description" content="Карта со Safe City камери за брзина во Македонија. Добијте предупредување пред камера додека возите — бесплатно и во реално време." />
+  <meta name="keywords" content="safe city камери македонија, камери за брзина скопје, радар македонија, safe city скопје, камери за сообраќај" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://makceni.mk/safecity" />
+  <meta property="og:title" content="Safe City Камери — МакЦени" />
+  <meta property="og:description" content="Карта со Safe City камери за брзина во Македонија. Предупредување во реално време додека возите." />
+  <meta property="og:url" content="https://makceni.mk/safecity" />
+  <meta property="og:image" content="https://makceni.mk/og-image.png" />
+  <meta property="og:type" content="website" />
+  <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Safe City Камери — МакЦени",
+    "description": "Предупредување за Safe City камери за брзина во Македонија во реално време",
+    "url": "https://makceni.mk/safecity",
+    "applicationCategory": "NavigationApplication",
+    "operatingSystem": "Web"
+  })}} />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>{`
           *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
           body{background:#F4F1EB;color:#1a1a2e;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;}
           .leaflet-control-attribution{display:none!important;}

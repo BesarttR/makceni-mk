@@ -314,11 +314,27 @@ const FUEL_LIST = [
 
   return (
     <>
-      <Head>
-        <title>{tr("mapa.pageTitle")}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-        <style>{`
+   <Head>
+  <title>Бензински Станици во Македонија — Карта | МакЦени</title>
+  <meta name="description" content="Пронајдете ја најблиската бензинска станица во Македонија. Карта со сите Макпетрол, Окта и Лукоил станици — цени, локации и насоки." />
+  <meta name="keywords" content="бензинска станица македонија, макпетрол локации, окта бензинска, лукоил скопје, најблиска бензинска" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://makceni.mk/mapa" />
+  <meta property="og:title" content="Бензински Станици во Македонија — МакЦени" />
+  <meta property="og:description" content="Карта со сите бензински станици во Македонија. Пронајди ја најблиската до тебе." />
+  <meta property="og:url" content="https://makceni.mk/mapa" />
+  <meta property="og:image" content="https://makceni.mk/og-image.png" />
+  <meta property="og:type" content="website" />
+  <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Map",
+    "name": "Бензински станици во Македонија",
+    "description": "Интерактивна карта со сите бензински станици во Македонија",
+    "url": "https://makceni.mk/mapa"
+  })}} />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>{`
           *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
           body{overflow:hidden;font-family:'DM Sans',sans-serif;background:${C.bg};color:${C.text}}
           .leaflet-control-attribution{display:none!important}

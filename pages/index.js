@@ -576,51 +576,65 @@ function MobileDrawer({ open, close, loading, timeStr, tr }) {
   );
 }
 
+// Replace the entire Berza function in index.js with this:
+
 function Berza({ tr }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/berza").then(r => r.json()).then(d => { setData(d); setLoading(false); }).catch(() => setLoading(false));
+    fetch("/api/berza")
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
   }, []);
 
-const oil = (data?.oil || [
-    { name: "Brent Crude", usd: "—", mkd: "—", change: 0, unit: "barrel" },
-    { name: "WTI Crude",   usd: "—", mkd: "—", change: 0, unit: "barrel" },
+  // Use live data if present; usd/mkd will be null if the fetch failed —
+  // the Row component renders "—" for null values rather than stale numbers.
+  const oil = (data?.oil || [
+    { name: "Brent Crude", usd: null, mkd: null, change: 0, unit: "barrel" },
+    { name: "WTI Crude",   usd: null, mkd: null, change: 0, unit: "barrel" },
   ]).map(o => ({ ...o, unit: tr("home.berza.barrel") }));
-const metals = (data?.metals || [
-    { name: "gold", usd: "—", mkd: "—", change: 0, unit: "gram" },
-    { name: "silver", usd: "—", mkd: "—", change: 0, unit: "gram" },
+
+  const metals = (data?.metals || [
+    { name: "gold",   usd: null, mkd: null, change: 0, unit: "gram" },
+    { name: "silver", usd: null, mkd: null, change: 0, unit: "gram" },
   ]).map(m => ({
     ...m,
     name: m.name === "gold" ? tr("home.berza.gold") : m.name === "silver" ? tr("home.berza.silver") : m.name,
     unit: tr("home.berza.gram"),
   }));
+
   const crypto = data?.crypto || [
-    { name: "Bitcoin",  usd: "—", mkd: "—", change: 0, unit: "BTC" },
-    { name: "Ethereum", usd: "—", mkd: "—", change: 0, unit: "ETH" },
+    { name: "Bitcoin",  usd: null, mkd: null, change: 0, unit: "BTC" },
+    { name: "Ethereum", usd: null, mkd: null, change: 0, unit: "ETH" },
   ];
 
-  const Row = ({ item, last }) => (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: last ? "none" : `1px solid ${C.border}` }}>
-      <div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{item.name}</div>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
-          {loading ? tr("home.berza.loading") : `${typeof item.mkd === "number" ? item.mkd.toLocaleString() : item.mkd} ден / ${item.unit}`}
-        </div>
-      </div>
-      <div style={{ textAlign: "right" }}>
-        <div style={{ fontSize: 20, fontWeight: 800, color: C.text }}>
-          {loading ? "—" : `$${typeof item.usd === "number" ? item.usd.toLocaleString() : item.usd}`}
-        </div>
-        {!loading && typeof item.change === "number" && item.change !== 0 && (
-          <div style={{ fontSize: 11, fontWeight: 700, color: item.change > 0 ? C.red : C.green, marginTop: 2 }}>
-            {item.change > 0 ? "▲ +" : "▼ "}{Math.abs(item.change)}{tr("home.berza.todayChange")}
+  const Row = ({ item, last }) => {
+    const usdDisplay = item.usd != null ? `$${typeof item.usd === "number" ? item.usd.toLocaleString() : item.usd}` : "—";
+    const mkdDisplay = item.mkd != null ? `${typeof item.mkd === "number" ? item.mkd.toLocaleString() : item.mkd} ден / ${item.unit}` : tr("home.berza.loading");
+
+    return (
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: last ? "none" : `1px solid ${C.border}` }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{item.name}</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+            {loading ? tr("home.berza.loading") : mkdDisplay}
           </div>
-        )}
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: C.text }}>
+            {loading ? "—" : usdDisplay}
+          </div>
+          {!loading && typeof item.change === "number" && item.change !== 0 && (
+            <div style={{ fontSize: 11, fontWeight: 700, color: item.change > 0 ? C.red : C.green, marginTop: 2 }}>
+              {item.change > 0 ? "▲ +" : "▼ "}{Math.abs(item.change)}{tr("home.berza.todayChange")}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const Section = ({ emoji, title, items, border }) => (
     <div style={{ padding: "0 20px", borderBottom: border ? `1px solid ${C.border}` : "none" }}>
@@ -634,11 +648,15 @@ const metals = (data?.metals || [
       <div style={{ padding: "16px 20px", background: C.surface2, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{tr("home.berza.title")}</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>{data?.source ? `Извор: ${data.source}` : tr("home.berza.subtitle")}</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>
+            {data?.stale ? tr("home.berza.unavailable") : tr("home.berza.subtitle")}
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 5, background: C.greenBg, border: `1px solid ${C.greenBdr}`, borderRadius: 20, padding: "3px 9px" }}>
-          <LiveDot />
-          <span style={{ fontSize: 11, fontWeight: 700, color: C.green }}>{tr("nav.live")}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, background: data?.stale ? C.surface2 : C.greenBg, border: `1px solid ${data?.stale ? C.border : C.greenBdr}`, borderRadius: 20, padding: "3px 9px" }}>
+          {data?.stale ? null : <LiveDot />}
+          <span style={{ fontSize: 11, fontWeight: 700, color: data?.stale ? C.muted : C.green }}>
+            {data?.stale ? "—" : tr("nav.live")}
+          </span>
         </div>
       </div>
       <Section emoji="⛽" title={tr("home.berza.oil")}    items={oil}    border={true} />
@@ -915,15 +933,47 @@ const today = new Date().toLocaleDateString(localeMap[lang] || "mk-MK", { day: "
 
   return (
     <>
-      <Head>
-        <title>МакЦени.мк — Цени на горива во Македонија</title>
-        <meta name="description" content="Официјални цени на гориво во Македонија — ажурирани во реално време." />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-        <style>{`
+    <Head>
+  <title>МакЦени.мк — Цени на Гориво во Македонија | Бензин, Дизел, ЛПГ</title>
+  <meta name="description" content="Споредете цени на гориво во Македонија — бензин, дизел, ЛПГ, метан. Ажурирани цени од сите бензински станици: Макпетрол, Окта, Лукоил." />
+  <meta name="keywords" content="цени на гориво македонија, бензин цена, дизел цена, ЛПГ цена, макпетрол, окта, лукоил, гориво македонија, makceni" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://makceni.mk" />
+
+  {/* Open Graph */}
+  <meta property="og:title" content="МакЦени.мк — Цени на Гориво во Македонија" />
+  <meta property="og:description" content="Споредете цени на бензин, дизел и ЛПГ во сите бензински станици низ Македонија. Ажурирано во реално време." />
+  <meta property="og:url" content="https://makceni.mk" />
+  <meta property="og:image" content="https://makceni.mk/og-image.png" />
+  <meta property="og:type" content="website" />
+
+  {/* Twitter */}
+  <meta name="twitter:title" content="МакЦени.мк — Цени на Гориво во Македонија" />
+  <meta name="twitter:description" content="Споредете цени на бензин, дизел и ЛПГ во сите бензински станици низ Македонија." />
+  <meta name="twitter:image" content="https://makceni.mk/og-image.png" />
+
+  {/* JSON-LD */}
+  <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "МакЦени — Цени на гориво во Македонија",
+    "description": "Споредете цени на бензин, дизел, ЛПГ и метан во Македонија во реално време.",
+    "url": "https://makceni.mk",
+    "inLanguage": ["mk", "sq", "en", "tr"],
+    "publisher": {
+      "@type": "Organization",
+      "name": "МакЦени",
+      "url": "https://makceni.mk",
+      "logo": { "@type": "ImageObject", "url": "https://makceni.mk/logo.png" }
+    }
+  })}} />
+
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>{`
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
           html, body { background: ${C.bg}; color: ${C.text}; font-family: 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
           input, select, button, a { font-family: 'DM Sans', sans-serif; }
