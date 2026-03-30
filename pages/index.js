@@ -92,7 +92,8 @@ function LiveDot({ color = C.green }) {
   );
 }
 
-function ShareButton({ fuel, tr }) {
+function ShareButton({ fuel, tr, customChangeText }) {
+
   const [showMenu, setShowMenu] = useState(false);
   const ref = useRef(null);
 
@@ -102,13 +103,29 @@ function ShareButton({ fuel, tr }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const changeText = fuel.change > 0
+  const changeText = customChangeText
+    ? customChangeText
+    : fuel.change > 0
     ? tr("home.share.up", { change: fuel.change.toFixed(1) })
     : fuel.change < 0
     ? tr("home.share.down", { change: fuel.change.toFixed(1) })
     : tr("home.share.noChange");
+const siteLabel = {
+  mk: "Цени на гориво",
+  sq: "Çmimet e karburantit",
+  en: "Fuel prices",
+  tr: "Yakıt fiyatları",
+}[tr("_lang")] || "Цени на гориво";
 
-  const message = `⛽ Цени на гориво — makceni.mk\n\n${fuel.label}: ${fuel.price.toFixed(1)} ден/л\n${changeText}\n\nПровери ги сите цени: https://makceni.mk`;
+const checkAllLabel = {
+  mk: "Провери ги сите цени",
+  sq: "Shiko të gjitha çmimet",
+  en: "Check all prices",
+  tr: "Tüm fiyatları gör",
+}[tr("_lang")] || "Провери ги сите цени";
+
+const message = `⛽ ${siteLabel} — makceni.mk\n\n${fuel.label}: ${fuel.price.toFixed(1)} ${tr("home.den")}/${fuel.unit.split("/")[1] || "л"}\n${changeText}\n\n${checkAllLabel}: https://makceni.mk`;
+
   const encodedMsg = encodeURIComponent(message);
 
   return (
@@ -146,7 +163,8 @@ function ShareButton({ fuel, tr }) {
   );
 }
 
-function CarouselCard({ fuel, position, onClick, timeStr, loading, tr }) {
+function CarouselCard({ fuel, position, onClick, timeStr, loading, tr, lang }) {
+  
   const isCenter = position === 0;
   const isAdjacent = Math.abs(position) === 1;
   if (Math.abs(position) >= 2) return null;
@@ -158,7 +176,20 @@ function CarouselCard({ fuel, position, onClick, timeStr, loading, tr }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div><div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.3 }}>{fuel.label}</div></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {isCenter && <ShareButton fuel={fuel} tr={tr} />}
+            {isCenter && (
+              <ShareButton
+                fuel={fuel}
+                tr={tr}
+                lang={lang}
+                customChangeText={
+                  fuel.key === "benzin95" ? tr("home.priceChange.benzin95") :
+                  fuel.key === "benzin98" ? tr("home.priceChange.benzin98") :
+                  fuel.key === "mazut"    ? tr("home.priceChange.mazut")    :
+                  fuel.key === "ekstra"   ? tr("home.priceChange.ekstra")   :
+                  null
+                }
+              />
+            )}
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>{timeStr || "—"}</div>
           </div>
         </div>
@@ -182,7 +213,7 @@ function CarouselCard({ fuel, position, onClick, timeStr, loading, tr }) {
   );
 }
 
-function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading, tr }) {
+function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading, tr, lang }) {
   const n = fuelData.length;
   const PEEK = 36, GAP = 12;
 
@@ -270,13 +301,12 @@ function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading, tr })
           {cloned.map((fuel, i) => {
             const fc = FUEL_COLORS[fuel.key] || FUEL_COLORS.mazut;
             const isActive = i === visualIdx;
-            const hasChange = Math.abs(fuel.change) >= 0.05;
 
             const customMsg = {
-              benzin95: { text: "Се намалува за 2.5 ден од полноќ", color: "#4dff91" },
-              benzin98: { text: "Се намалува за 3 ден од полноќ", color: "#4dff91" },
-              mazut:    { text: "Се намалува за 0.7 ден од полноќ", color: "#4dff91" },
-              ekstra:   { text: "Се зголемува за 0.5 ден од полноќ", color: "#ff4d4d" },
+              benzin95: { text: tr("home.priceChange.benzin95"), color: "#4dff91" },
+              benzin98: { text: tr("home.priceChange.benzin98"), color: "#4dff91" },
+              mazut:    { text: tr("home.priceChange.mazut"),    color: "#4dff91" },
+              ekstra:   { text: tr("home.priceChange.ekstra"),   color: "#ff4d4d" },
             };
 
             return (
@@ -349,7 +379,14 @@ function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading, tr })
                         gap: 4,
                       }}
                     >
-                      {isActive && <ShareButton fuel={fuel} tr={tr} />}
+                      {isActive && (
+                        <ShareButton
+                          fuel={fuel}
+                          tr={tr}
+                          lang={lang}
+                          customChangeText={customMsg[fuel.key]?.text || null}
+                        />
+                      )}
 
                       <div
                         style={{
@@ -1247,7 +1284,7 @@ const today = new Date().toLocaleDateString(localeMap[lang] || "mk-MK", { day: "
 
           {isMobile ? (
             <div style={{ marginBottom: 32 }}>
-              <MobileCarousel fuelData={fuelData} activeIdx={activeIdx} onSelect={handleSelect} timeStr={timeStr} loading={loading} tr={tr} />
+             <MobileCarousel fuelData={fuelData} activeIdx={activeIdx} onSelect={handleSelect} timeStr={timeStr} loading={loading} tr={tr} lang={lang} />
             </div>
           ) : (
             <>
@@ -1255,7 +1292,7 @@ const today = new Date().toLocaleDateString(localeMap[lang] || "mk-MK", { day: "
                 {fuelData.map((fuel, i) => {
                   const pos = i - activeIdx;
                   const wrapped = pos > fuelData.length / 2 ? pos - fuelData.length : pos < -fuelData.length / 2 ? pos + fuelData.length : pos;
-                  return <CarouselCard key={fuel.key} fuel={fuel} position={wrapped} timeStr={timeStr} loading={loading} onClick={() => handleSelect(i)} tr={tr} />;
+                  return <CarouselCard key={fuel.key} fuel={fuel} position={wrapped} timeStr={timeStr} loading={loading} onClick={() => handleSelect(i)} tr={tr} lang={lang} />
                 })}
               </div>
               <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 48, flexWrap: "wrap" }}>

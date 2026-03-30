@@ -167,8 +167,8 @@ const translations = {
   // MACEDONIAN (default)
   // ══════════════════════════════════════════════════════════════════
   mk: {
-
-      stationPrices: {
+"home.share.message": "⛽ Цени на гориво — makceni.mk\n\n{label}: {price} ден/л\n{changeText}\n\nПровери ги сите цени: https://makceni.mk",
+    stationPrices: {
     title: "Цени на горива",
     station: "Станица",
     benzin95: "Бензин 95",
@@ -533,8 +533,8 @@ const translations = {
   // ALBANIAN
   // ══════════════════════════════════════════════════════════════════
   sq: {
- 
-      stationPrices: {
+ "home.share.message": "⛽ Çmimet e karburantit — makceni.mk\n\n{label}: {price} den/l\n{changeText}\n\nShiko të gjitha çmimet: https://makceni.mk",
+    stationPrices: {
     title: "Çmimet e karburantit",
     station: "Stacioni",
     benzin95: "Benzinë 95",
@@ -897,8 +897,8 @@ mapa: {
   // ENGLISH
   // ══════════════════════════════════════════════════════════════════
   en: {
-  
-      stationPrices: {
+  "home.share.message": "⛽ Fuel prices — makceni.mk\n\n{label}: {price} den/L\n{changeText}\n\nCheck all prices: https://makceni.mk",
+    stationPrices: {
     title: "Fuel Prices",
     station: "Station",
     benzin95: "Petrol 95",
@@ -1263,7 +1263,7 @@ mapa: {
   // TURKISH
   // ══════════════════════════════════════════════════════════════════
   tr: {
-
+"home.share.message": "⛽ Yakıt fiyatları — makceni.mk\n\n{label}: {price} den/L\n{changeText}\n\nTüm fiyatları gör: https://makceni.mk",
       stationPrices: {
     title: "Yakıt Fiyatları",
     station: "İstasyon",
