@@ -199,127 +199,132 @@ const translations = {
       updated:     "Аж. {{time}}",
     },
 
-    home: {
-      units: { perL: "ден/л", perKg: "ден/кг" },
-      todayBadge:    "ДЕНЕС",
-      heroTitle:     "Цени на горива · Македонија",
-      swipeHint:     "← Повлечи лево/десно →",
-      noChange:      "Нема промена",
-      den:           "ден",
+   home: {
+  priceChange: {
+    benzin95: "▼ Се намалува за 2.5 ден од полноќ",
+    benzin98: "▼ Се намалува за 3 ден од полноќ",
+    mazut:    "▼ Се намалува за 0.7 ден од полноќ",
+    ekstra:   "▲ Се зголемува за 0.5 ден од полноќ",
+  },
+  units: { perL: "ден/л", perKg: "ден/кг" },
+  todayBadge:    "ДЕНЕС",
+  heroTitle:     "Цени на горива · Македонија",
+  swipeHint:     "← Повлечи лево/десно →",
+  noChange:      "Нема промена",
+  den:           "ден",
 
-      stationTable: {
-        title:     "⛽ Цени на пумпа",
-        subtitle:  "Цени по бензински",
-        subtitleWithTime: "Ажурирано {{time}} ·",
-        station:   "Бензинска",
-        disclaimer:"ⓘ Цените може да се разликуваат до 3 ден во однос на регулираните цени од РКЕ.",
-      },
+  stationTable: {
+    title:     "⛽ Цени на пумпа",
+    subtitle:  "Цени по бензински",
+    subtitleWithTime: "Ажурирано {{time}} ·",
+    station:   "Бензинска",
+    disclaimer:"ⓘ Цените може да се разликуваат до 3 ден во однос на регулираните цени од РКЕ.",
+  },
 
-      cards: {
-        gasStations: {
-          title:    "Бензинcки",
-          badge:    "350+ локации",
-          desc:     "Пронајди ја најблиската бензинска станица — OKTA, Макпетрол, Лукоил и повеќе.",
-          cta:      "Отвори мапа →",
-        },
-        safeCity: {
-          title:    "Safe City",
-          badge:    "218 камери",
-          desc:     "Локации на Safe City камери за брзина во Скопје. Возете внимателно.",
-          cta:      "Отвори мапа →",
-        },
-      },
-
-      alerts: {
-        title:       "Известувања за цени",
-        desc:        "Прими известување кога цената ќе падне под твојот праг.",
-        placeholder: "email@example.com",
-        activate:    "Активирај",
-        saved:       "✓ Зачувано!",
-      },
-
-      calculator: {
-        litersUnit: "л",
-        title:        "Калкулатор за пат",
-        subtitle:     "Пресметај ги трошоците за патување",
-        km:           "Километри",
-        per100:       "л / 100км",
-        fuelType:     "Вид гориво",
-        totalCost:    "Вкупен трошок",
-        liters:       "Литри",
-      },
-
-      carProfile: {
-        title:       "🚗 Мојот автомобил",
-        subtitle:    "Персонализирани трошоци за возење",
-        modelLabel:  "Модел на возило",
-        modelPlaceholder: "пр. VW Golf 5",
-        consumption: "Потрошувачка (л/100км)",
-        fuelType:    "Вид гориво",
-        save:        "Зачувај профил →",
-        saveChanges: "Зачувај промени",
-        cancel:      "Откажи",
-        edit:        "Промени",
-        delete:      "Избриши",
-        costPerKm:   "Трошок / км",
-        costPer100:  "Трошок / 100км",
-        summary:     "Твојот {{model}} чини {{cost}} ден/км денес со {{fuel} на {{price}} ден.",
-      },
-
-      priceHistory: {
-        period7d: "7д", 
-        period30d: "30д", 
-        period6m: "6м",
-        title:       "Историја на цени",
-        subtitleReal:"Реални податоци ",
-        subtitleFallback: "Движење на цените низ времето",
-        current:     "Тековна",
-        min:         "Минимум",
-        max:         "Максимум",
-        change:      "Промена",
-        disclaimer:  "ⓘ Историски податоци се собираат од денес. Реалниот график ќе биде достапен по неколку дена.",
-      },
-
-   berza: {
-  title:    "Берза",
-  subtitle: "Ажурирано секој час од јавни API-ја",
-  oil:      "Нафта",
-  metals:   "Метали",
-  crypto:   "Крипто",
-  loading:  "Вчитување...",
-  todayChange: "% денес",
-  barrel:   "барел",
-  gram:     "грам",
-  gold:     "Злато",
-  silver:   "Сребро",
-},
-
-      news: {
-        label:       "Вести",
-        empty:       "Нема вести во моментов.",
-        showMore:    "Прикажи повеќе вести →",
-        showLess:    "← Прикажи помалку",
-      },
-
-      share: {
-        button:    "Сподели",
-        viber:     "Viber",
-        whatsapp:  "WhatsApp",
-        copy:      "Копирај",
-        message:   "⛽ Цени на гориво — makceni.mk\n\n{{label}}: {{price}} ден/л\n{{changeText}}\n\nПровери ги сите цени: https://makceni.mk",
-        up:        "▲ +{{change}} ден промена",
-        down:      "▼ {{change}} ден промена",
-        noChange:  "Нема промена",
-      },
-
-      footer: {
-        disclaimer: "Цените се информативни и може да се разликуваат на точката на продажба.",
-        terms:      "Услови",
-        privacy:    "Приватност",
-        contact:    "Контакт",
-      },
+  cards: {
+    gasStations: {
+      title:    "Бензинcки",
+      badge:    "350+ локации",
+      desc:     "Пронајди ја најблиската бензинска станица — OKTA, Макпетрол, Лукоил и повеќе.",
+      cta:      "Отвори мапа →",
     },
+    safeCity: {
+      title:    "Safe City",
+      badge:    "218 камери",
+      desc:     "Локации на Safe City камери за брзина во Скопје. Возете внимателно.",
+      cta:      "Отвори мапа →",
+    },
+  },
 
+  alerts: {
+    title:       "Известувања за цени",
+    desc:        "Прими известување кога цената ќе падне под твојот праг.",
+    placeholder: "email@example.com",
+    activate:    "Активирај",
+    saved:       "✓ Зачувано!",
+  },
+
+  calculator: {
+    litersUnit: "л",
+    title:        "Калкулатор за пат",
+    subtitle:     "Пресметај ги трошоците за патување",
+    km:           "Километри",
+    per100:       "л / 100км",
+    fuelType:     "Вид гориво",
+    totalCost:    "Вкупен трошок",
+    liters:       "Литри",
+  },
+
+  carProfile: {
+    title:       "🚗 Мојот автомобил",
+    subtitle:    "Персонализирани трошоци за возење",
+    modelLabel:  "Модел на возило",
+    modelPlaceholder: "пр. VW Golf 5",
+    consumption: "Потрошувачка (л/100км)",
+    fuelType:    "Вид гориво",
+    save:        "Зачувај профил →",
+    saveChanges: "Зачувај промени",
+    cancel:      "Откажи",
+    edit:        "Промени",
+    delete:      "Избриши",
+    costPerKm:   "Трошок / км",
+    costPer100:  "Трошок / 100км",
+    summary:     "Твојот {{model}} чини {{cost}} ден/км денес со {{fuel} на {{price}} ден.",
+  },
+
+  priceHistory: {
+    period7d: "7д",
+    period30d: "30д",
+    period6m: "6м",
+    title:       "Историја на цени",
+    subtitleReal:"Реални податоци ",
+    subtitleFallback: "Движење на цените низ времето",
+    current:     "Тековна",
+    min:         "Минимум",
+    max:         "Максимум",
+    change:      "Промена",
+    disclaimer:  "ⓘ Историски податоци се собираат од денес. Реалниот график ќе биде достапен по неколку дена.",
+  },
+
+  berza: {
+    title:    "Берза",
+    subtitle: "Ажурирано секој час од јавни API-ја",
+    oil:      "Нафта",
+    metals:   "Метали",
+    crypto:   "Крипто",
+    loading:  "Вчитување...",
+    todayChange: "% денес",
+    barrel:   "барел",
+    gram:     "грам",
+    gold:     "Злато",
+    silver:   "Сребро",
+  },
+
+  news: {
+    label:       "Вести",
+    empty:       "Нема вести во моментов.",
+    showMore:    "Прикажи повеќе вести →",
+    showLess:    "← Прикажи помалку",
+  },
+
+  share: {
+    button:    "Сподели",
+    viber:     "Viber",
+    whatsapp:  "WhatsApp",
+    copy:      "Копирај",
+    message:   "⛽ Цени на гориво — makceni.mk\n\n{{label}}: {{price}} ден/л\n{{changeText}}\n\nПровери ги сите цени: https://makceni.mk",
+    up:        "▲ +{{change}} ден промена",
+    down:      "▼ {{change}} ден промена",
+    noChange:  "Нема промена",
+  },
+
+  footer: {
+    disclaimer: "Цените се информативни и може да се разликуваат на точката на продажба.",
+    terms:      "Услови",
+    privacy:    "Приватност",
+    contact:    "Контакт",
+  },
+},
     safecity: {
       pageTitle:    "Safe City — Makceni.mk",
       headerTitle:  "Safe City",
@@ -561,6 +566,12 @@ const translations = {
     },
 
     home: {
+      priceChange: {
+  benzin95: "▼ Ulet për 2.5 den nga mesnata",
+  benzin98: "▼ Ulet për 3 den nga mesnata",
+  mazut:    "▼ Ulet për 0.7 den nga mesnata",
+  ekstra:   "▲ Rritet për 0.5 den nga mesnata",
+},
       units: { perL: "den/l", perKg: "den/kg" },
       todayBadge:    "SOT",
       heroTitle:     "Çmimet e karburantit · Maqedoni",
@@ -919,6 +930,12 @@ mapa: {
     },
 
     home: {
+      priceChange: {
+  benzin95: "▼ Decreasing by 2.5 den from midnight",
+  benzin98: "▼ Decreasing by 3 den from midnight",
+  mazut:    "▼ Decreasing by 0.7 den from midnight",
+  ekstra:   "▲ Increasing by 0.5 den from midnight",
+},
       units: { perL: "den/L", perKg: "den/kg" },
       todayBadge:    "TODAY",
       heroTitle:     "Fuel Prices · Macedonia",
@@ -1279,6 +1296,12 @@ mapa: {
     },
 
     home: {
+      priceChange: {
+  benzin95: "▼ Geceyarısından itibaren 2.5 den düşüyor",
+  benzin98: "▼ Geceyarısından itibaren 3 den düşüyor",
+  mazut:    "▼ Geceyarısından itibaren 0.7 den düşüyor",
+  ekstra:   "▲ Geceyarısından itibaren 0.5 den artıyor",
+},
       units: { perL: "den/L", perKg: "den/kg" },
       todayBadge:    "BUGÜN",
       heroTitle:     "Yakıt Fiyatları · Makedonya",

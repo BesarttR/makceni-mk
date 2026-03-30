@@ -151,7 +151,6 @@ function CarouselCard({ fuel, position, onClick, timeStr, loading, tr }) {
   const isAdjacent = Math.abs(position) === 1;
   if (Math.abs(position) >= 2) return null;
   const fc = FUEL_COLORS[fuel.key] || FUEL_COLORS.mazut;
-  const hasChange = Math.abs(fuel.change) >= 0.05;
   return (
     <div onClick={() => !isCenter && onClick()} style={{ position: "absolute", left: "50%", top: "50%", width: 340, transform: `translateX(calc(-50% + ${position * 310}px)) translateY(-50%) scale(${isCenter ? 1 : 0.78})`, transition: "all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)", opacity: isCenter ? 1 : 0.6, filter: isAdjacent ? "blur(1.5px)" : "none", zIndex: isCenter ? 10 : 5, cursor: isCenter ? "default" : "pointer" }}>
       <div style={{ background: fc.bg, borderRadius: 24, padding: "28px 28px 20px", boxShadow: isCenter ? `0 28px 70px ${fc.bg}55, 0 0 0 1px rgba(255,255,255,0.1)` : "0 12px 32px rgba(0,0,0,0.15)", minHeight: 280, display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative", overflow: "hidden" }}>
@@ -169,7 +168,10 @@ function CarouselCard({ fuel, position, onClick, timeStr, loading, tr }) {
             <span style={{ fontSize: 18, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>{tr("home.den")}</span>
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>{fuel.unit}</div>
-          {hasChange ? <div style={{ fontSize: 20, fontWeight: 800, color: fc.accent, marginTop: 8 }}>{fuel.change > 0 ? "▲ +" : "▼ "}{fuel.change.toFixed(1)} {tr("home.den")}</div>
+          {["benzin95","benzin98","mazut","ekstra"].includes(fuel.key)
+            ? <div style={{ fontSize: 13, fontWeight: 700, color: fuel.key === "ekstra" ? "#ff4d4d" : "#4dff91", marginTop: 8 }}>
+                {tr(`home.priceChange.${fuel.key}`)}
+              </div>
             : <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginTop: 8 }}>{tr("home.noChange")}</div>}
         </div>
         <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
@@ -183,70 +185,256 @@ function CarouselCard({ fuel, position, onClick, timeStr, loading, tr }) {
 function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading, tr }) {
   const n = fuelData.length;
   const PEEK = 36, GAP = 12;
+
   const [dragOffset, setDragOffset] = useState(0);
   const [dragging, setDragging] = useState(false);
+
   const startX = useRef(0);
   const containerRef = useRef(null);
+
   const cloned = [...fuelData, ...fuelData, ...fuelData];
   const [visualIdx, setVisualIdx] = useState(n + activeIdx);
 
   useEffect(() => {
-    setVisualIdx(vi => { const mod = ((vi % n) + n) % n; if (mod === activeIdx) return vi; return n + activeIdx; });
+    setVisualIdx((vi) => {
+      const mod = ((vi % n) + n) % n;
+      if (mod === activeIdx) return vi;
+      return n + activeIdx;
+    });
   }, [activeIdx, n]);
 
-  const getCardWidth = () => containerRef.current ? containerRef.current.offsetWidth : 300;
-  const handleTouchStart = (e) => { startX.current = e.touches[0].clientX; setDragging(true); setDragOffset(0); };
-  const handleTouchMove = (e) => { if (!dragging) return; setDragOffset(e.touches[0].clientX - startX.current); };
+  const getCardWidth = () =>
+    containerRef.current ? containerRef.current.offsetWidth : 300;
+
+  const handleTouchStart = (e) => {
+    startX.current = e.touches[0].clientX;
+    setDragging(true);
+    setDragOffset(0);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!dragging) return;
+    setDragOffset(e.touches[0].clientX - startX.current);
+  };
+
   const handleTouchEnd = (e) => {
     if (!dragging) return;
+
     setDragging(false);
+
     const diff = startX.current - e.changedTouches[0].clientX;
     const threshold = getCardWidth() * 0.25;
+
     let newVisual = visualIdx;
+
     if (diff > threshold) newVisual = visualIdx + 1;
     else if (diff < -threshold) newVisual = visualIdx - 1;
+
     let finalVisual = newVisual;
+
     if (finalVisual < n) finalVisual += n;
     if (finalVisual >= n * 2) finalVisual -= n;
+
     setVisualIdx(finalVisual);
     setDragOffset(0);
+
     onSelect(((finalVisual % n) + n) % n);
   };
 
   const cardW = `calc(100% - ${PEEK * 2}px)`;
+
   const liveTranslate = dragging
     ? `calc(${PEEK}px - ${visualIdx} * (${cardW} + ${GAP}px) + ${dragOffset}px)`
     : `calc(${PEEK}px - ${visualIdx} * (${cardW} + ${GAP}px))`;
 
   return (
     <div style={{ position: "relative" }}>
-      <div ref={containerRef} style={{ overflow: "hidden" }} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-        <div style={{ display: "flex", gap: GAP, transition: dragging ? "none" : "transform 0.42s cubic-bezier(0.34, 1.2, 0.64, 1)", transform: `translateX(${liveTranslate})`, willChange: "transform" }}>
+      <div
+        ref={containerRef}
+        style={{ overflow: "hidden" }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: GAP,
+            transition: dragging
+              ? "none"
+              : "transform 0.42s cubic-bezier(0.34, 1.2, 0.64, 1)",
+            transform: `translateX(${liveTranslate})`,
+            willChange: "transform",
+          }}
+        >
           {cloned.map((fuel, i) => {
             const fc = FUEL_COLORS[fuel.key] || FUEL_COLORS.mazut;
             const isActive = i === visualIdx;
             const hasChange = Math.abs(fuel.change) >= 0.05;
+
+            const customMsg = {
+              benzin95: { text: "Се намалува за 2.5 ден од полноќ", color: "#4dff91" },
+              benzin98: { text: "Се намалува за 3 ден од полноќ", color: "#4dff91" },
+              mazut:    { text: "Се намалува за 0.7 ден од полноќ", color: "#4dff91" },
+              ekstra:   { text: "Се зголемува за 0.5 ден од полноќ", color: "#ff4d4d" },
+            };
+
             return (
-              <div key={`${fuel.key}-${i}`} style={{ flex: `0 0 ${cardW}`, transition: dragging ? "none" : "opacity 0.3s, transform 0.3s", opacity: isActive ? 1 : 0.45, transform: isActive ? "scale(1)" : "scale(0.95)" }}>
-                <div style={{ background: fc.bg, borderRadius: 20, padding: "22px 22px 16px", boxShadow: isActive ? `0 18px 48px ${fc.bg}55, 0 0 0 1px rgba(255,255,255,0.1)` : "0 6px 18px rgba(0,0,0,0.1)", minHeight: 250, display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative", overflow: "hidden", userSelect: "none", WebkitUserSelect: "none" }}>
-                  <div style={{ position: "absolute", top: -40, right: -40, width: 150, height: 150, borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                    <div><div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.3 }}>{fuel.label}</div></div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+              <div
+                key={`${fuel.key}-${i}`}
+                style={{
+                  flex: `0 0 ${cardW}`,
+                  transition: dragging ? "none" : "opacity 0.3s, transform 0.3s",
+                  opacity: isActive ? 1 : 0.45,
+                  transform: isActive ? "scale(1)" : "scale(0.95)",
+                }}
+              >
+                <div
+                  style={{
+                    background: fc.bg,
+                    borderRadius: 20,
+                    padding: "22px 22px 16px",
+                    boxShadow: isActive
+                      ? `0 18px 48px ${fc.bg}55, 0 0 0 1px rgba(255,255,255,0.1)`
+                      : "0 6px 18px rgba(0,0,0,0.1)",
+                    minHeight: 250,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    position: "relative",
+                    overflow: "hidden",
+                    userSelect: "none",
+                    WebkitUserSelect: "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -40,
+                      right: -40,
+                      width: 150,
+                      height: 150,
+                      borderRadius: "50%",
+                      background: "rgba(255,255,255,0.05)",
+                      pointerEvents: "none",
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 20,
+                          fontWeight: 800,
+                          color: "#fff",
+                          letterSpacing: -0.3,
+                        }}
+                      >
+                        {fuel.label}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-end",
+                        gap: 4,
+                      }}
+                    >
                       {isActive && <ShareButton fuel={fuel} tr={tr} />}
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>{timeStr || "—"}</div>
+
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: "rgba(255,255,255,0.4)",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {timeStr || "—"}
+                      </div>
                     </div>
                   </div>
+
                   <div style={{ marginBottom: 6 }}>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                      <span style={{ fontSize: 54, fontWeight: 800, color: "#fff", letterSpacing: -2, lineHeight: 1 }}>{loading ? "—" : fuel.price.toFixed(1)}</span>
-                      <span style={{ fontSize: 16, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>{tr("home.den")}</span>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "baseline",
+                        gap: 6,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 54,
+                          fontWeight: 800,
+                          color: "#fff",
+                          letterSpacing: -2,
+                          lineHeight: 1,
+                        }}
+                      >
+                        {loading ? "—" : fuel.price.toFixed(1)}
+                      </span>
+
+                      <span
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 600,
+                          color: "rgba(255,255,255,0.5)",
+                        }}
+                      >
+                        {tr("home.den")}
+                      </span>
                     </div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{fuel.unit}</div>
-                    {hasChange ? <div style={{ fontSize: 17, fontWeight: 800, color: fc.accent, marginTop: 6 }}>{fuel.change > 0 ? "▲ +" : "▼ "}{fuel.change.toFixed(1)} {tr("home.den")}</div>
-                      : <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 6 }}>{tr("home.noChange")}</div>}
+
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.35)",
+                        marginTop: 2,
+                      }}
+                    >
+                      {fuel.unit}
+                    </div>
+
+                    {customMsg[fuel.key] ? (
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: customMsg[fuel.key].color,
+                          marginTop: 6,
+                        }}
+                      >
+                        {customMsg[fuel.key].text}
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: "rgba(255,255,255,0.3)",
+                          marginTop: 6,
+                        }}
+                      >
+                        {tr("home.noChange")}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ marginTop: "auto", paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+
+                  <div
+                    style={{
+                      marginTop: "auto",
+                      paddingTop: 10,
+                      borderTop: "1px solid rgba(255,255,255,0.1)",
+                    }}
+                  >
                     <Sparkline data={fuel.history} color={fc.spark} height={44} />
                   </div>
                 </div>
@@ -255,18 +443,34 @@ function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading, tr })
           })}
         </div>
       </div>
+
       <div style={{ textAlign: "center", marginTop: 8, marginBottom: 2 }}>
-        <span style={{ fontSize: 14, color: C.muted, fontWeight: 500 }}>{tr("home.swipeHint")}</span>
+        <span style={{ fontSize: 14, color: C.muted, fontWeight: 500 }}>
+          {tr("home.swipeHint")}
+        </span>
       </div>
+
       <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 14 }}>
         {fuelData.map((_, i) => (
-          <button key={i} onClick={() => onSelect(i)} style={{ width: i === activeIdx ? 22 : 6, height: 6, borderRadius: 3, border: "none", cursor: "pointer", padding: 0, background: i === activeIdx ? C.orange : C.borderMid, transition: "all 0.3s ease" }} />
+          <button
+            key={i}
+            onClick={() => onSelect(i)}
+            style={{
+              width: i === activeIdx ? 22 : 6,
+              height: 6,
+              borderRadius: 3,
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              background: i === activeIdx ? C.orange : C.borderMid,
+              transition: "all 0.3s ease",
+            }}
+          />
         ))}
       </div>
     </div>
   );
 }
-
 function PriceHistory({ fuelData, isMobile, tr, lang }) {
   const [activeFuel, setActiveFuel] = useState("benzin95");
   const [activePeriod, setActivePeriod] = useState("7д");
