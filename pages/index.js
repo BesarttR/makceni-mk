@@ -167,13 +167,13 @@ const message = `⛽ ${siteLabel} — makceni.mk\n\n${fuel.label}: ${fuel.price.
 // Uncomment any line to show a message on that card.
 // Comment it out to hide it. Use #4dff91 for green, #ff4d4d for red.
 const PRICE_MESSAGES = {
-  // benzin95: { text: "Се намалува за 2.5 ден од полноќ", color: "#4dff91" },
-  // benzin98: { text: "Се намалува за 3 ден од полноќ", color: "#4dff91" },
-  // dizel:    { text: "Нема промена оваа недела", color: "rgba(255,255,255,0.3)" },
-  // ekstra:   { text: "Се зголемува за 0.5 ден од полноќ", color: "#ff4d4d" },
-  // mazut:    { text: "Се намалува за 0.7 ден од полноќ", color: "#4dff91" },
-  // lpg:      { text: "Нема промена", color: "rgba(255,255,255,0.3)" },
-  // cng:      { text: "Нема промена", color: "rgba(255,255,255,0.3)" },
+  // benzin95: { text: "Се намалува за 2.5 ден од полноќ", color: "#4dff91", textColor: "#fff", arrow: "▼" },
+  // benzin98: { text: "Се намалува за 3 ден од полноќ", color: "#4dff91", textColor: "#fff", arrow: "▼" },
+  // dizel:    { text: "Нема промена оваа недела", color: "#fff", textColor: "#fff", arrow: null },
+  // ekstra:   { text: "Се зголемува за 0.5 ден од полноќ", color: "#ff4d4d", textColor: "#fff", arrow: "▲" },
+  // mazut:    { text: "Се намалува за 0.7 ден од полноќ", color: "#4dff91", textColor: "#fff", arrow: "▼" },
+  // lpg:      { text: "Нема промена", color: "#fff", textColor: "#fff", arrow: null },
+  // cng:      { text: "Нема промена", color: "#fff", textColor: "#fff", arrow: null },
 };
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -199,11 +199,15 @@ function CarouselCard({ fuel, position, onClick, timeStr, loading, tr, lang }) {
             <span style={{ fontSize: 18, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>{tr("home.den")}</span>
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>{fuel.unit}</div>
-          {PRICE_MESSAGES[fuel.key] && (
-            <div style={{ fontSize: 13, fontWeight: 700, color: PRICE_MESSAGES[fuel.key].color, marginTop: 8 }}>
-              {PRICE_MESSAGES[fuel.key].text}
-            </div>
-          )}
+          
+       {PRICE_MESSAGES[fuel.key] && (
+  <div style={{ fontSize: 13, fontWeight: 700, marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
+    {PRICE_MESSAGES[fuel.key].arrow && (
+      <span style={{ color: PRICE_MESSAGES[fuel.key].color }}>{PRICE_MESSAGES[fuel.key].arrow}</span>
+    )}
+    <span style={{ color: PRICE_MESSAGES[fuel.key].textColor || "#fff" }}>{PRICE_MESSAGES[fuel.key].text}</span>
+  </div>
+)}
         </div>
         <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
           <Sparkline data={fuel.history} color={fc.spark} height={52} />
@@ -379,11 +383,14 @@ function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading, tr, l
                       {fuel.unit}
                     </div>
 
-                    {PRICE_MESSAGES[fuel.key] && (
-                      <div style={{ fontSize: 12, fontWeight: 700, color: PRICE_MESSAGES[fuel.key].color, marginTop: 6 }}>
-                        {PRICE_MESSAGES[fuel.key].text}
-                      </div>
-                    )}
+                {PRICE_MESSAGES[fuel.key] && (
+  <div style={{ fontSize: 12, fontWeight: 700, marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
+    {PRICE_MESSAGES[fuel.key].arrow && (
+      <span style={{ color: PRICE_MESSAGES[fuel.key].color }}>{PRICE_MESSAGES[fuel.key].arrow}</span>
+    )}
+    <span style={{ color: PRICE_MESSAGES[fuel.key].textColor || "#fff" }}>{PRICE_MESSAGES[fuel.key].text}</span>
+  </div>
+)}
                   </div>
 
                   <div style={{ marginTop: "auto", paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
