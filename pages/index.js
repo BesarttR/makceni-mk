@@ -42,9 +42,9 @@ const FALLBACK_HISTORY = {
 };
 
 const FALLBACK_STATIONS = [
-  { key: "makpetrol", name: "Makpetrol", logo: "/logos/makpetrol.png", prices: { benzin95: 84.5, benzin98: 86.5, dizel: 93.5, lpg: 59.0 } },
-  { key: "okta",      name: "Okta",      logo: "/logos/okta.png",      prices: { benzin95: 84.5, benzin98: 86.5, dizel: 92.5, lpg: 59.0 } },
-  { key: "lukoil",    name: "Lukoil",    logo: "/logos/lukoil.png",    prices: { benzin95: 84.5, benzin98: 86.5, dizel: 93.5, lpg: 57.0 } },
+  { key: "makpetrol", name: "Makpetrol", logo: "/logos/makpetrol.png", prices: { benzin95: 82.0, benzin98: 83.5, dizel: 92.5, lpg: 59.0 } },
+  { key: "okta",      name: "Okta",      logo: "/logos/okta.png",      prices: { benzin95: 82.0, benzin98: 83.5, dizel: 92.5, lpg: 59.0 } },
+  { key: "lukoil",    name: "Lukoil",    logo: "/logos/lukoil.png",    prices: { benzin95: 82.0, benzin98: 83.5, dizel: 92.5, lpg: 59.0 } },
 ];
 
 
@@ -163,8 +163,21 @@ const message = `⛽ ${siteLabel} — makceni.mk\n\n${fuel.label}: ${fuel.price.
   );
 }
 
+// ─── EDIT MESSAGES HERE ───────────────────────────────────────────────────────
+// Uncomment any line to show a message on that card.
+// Comment it out to hide it. Use #4dff91 for green, #ff4d4d for red.
+const PRICE_MESSAGES = {
+  // benzin95: { text: "Се намалува за 2.5 ден од полноќ", color: "#4dff91" },
+  // benzin98: { text: "Се намалува за 3 ден од полноќ", color: "#4dff91" },
+  // dizel:    { text: "Нема промена оваа недела", color: "rgba(255,255,255,0.3)" },
+  // ekstra:   { text: "Се зголемува за 0.5 ден од полноќ", color: "#ff4d4d" },
+  // mazut:    { text: "Се намалува за 0.7 ден од полноќ", color: "#4dff91" },
+  // lpg:      { text: "Нема промена", color: "rgba(255,255,255,0.3)" },
+  // cng:      { text: "Нема промена", color: "rgba(255,255,255,0.3)" },
+};
+// ──────────────────────────────────────────────────────────────────────────────
+
 function CarouselCard({ fuel, position, onClick, timeStr, loading, tr, lang }) {
-  
   const isCenter = position === 0;
   const isAdjacent = Math.abs(position) === 1;
   if (Math.abs(position) >= 2) return null;
@@ -176,20 +189,7 @@ function CarouselCard({ fuel, position, onClick, timeStr, loading, tr, lang }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div><div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.3 }}>{fuel.label}</div></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {isCenter && (
-              <ShareButton
-                fuel={fuel}
-                tr={tr}
-                lang={lang}
-                customChangeText={
-                  fuel.key === "benzin95" ? tr("home.priceChange.benzin95") :
-                  fuel.key === "benzin98" ? tr("home.priceChange.benzin98") :
-                  fuel.key === "mazut"    ? tr("home.priceChange.mazut")    :
-                  fuel.key === "ekstra"   ? tr("home.priceChange.ekstra")   :
-                  null
-                }
-              />
-            )}
+            {isCenter && <ShareButton fuel={fuel} tr={tr} lang={lang} />}
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>{timeStr || "—"}</div>
           </div>
         </div>
@@ -199,11 +199,11 @@ function CarouselCard({ fuel, position, onClick, timeStr, loading, tr, lang }) {
             <span style={{ fontSize: 18, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>{tr("home.den")}</span>
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>{fuel.unit}</div>
-          {["benzin95","benzin98","mazut","ekstra"].includes(fuel.key)
-            ? <div style={{ fontSize: 13, fontWeight: 700, color: fuel.key === "ekstra" ? "#ff4d4d" : "#4dff91", marginTop: 8 }}>
-                {tr(`home.priceChange.${fuel.key}`)}
-              </div>
-            : <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginTop: 8 }}>{tr("home.noChange")}</div>}
+          {PRICE_MESSAGES[fuel.key] && (
+            <div style={{ fontSize: 13, fontWeight: 700, color: PRICE_MESSAGES[fuel.key].color, marginTop: 8 }}>
+              {PRICE_MESSAGES[fuel.key].text}
+            </div>
+          )}
         </div>
         <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
           <Sparkline data={fuel.history} color={fc.spark} height={52} />
@@ -302,13 +302,6 @@ function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading, tr, l
             const fc = FUEL_COLORS[fuel.key] || FUEL_COLORS.mazut;
             const isActive = i === visualIdx;
 
-            const customMsg = {
-              benzin95: { text: tr("home.priceChange.benzin95"), color: "#4dff91" },
-              benzin98: { text: tr("home.priceChange.benzin98"), color: "#4dff91" },
-              mazut:    { text: tr("home.priceChange.mazut"),    color: "#4dff91" },
-              ekstra:   { text: tr("home.priceChange.ekstra"),   color: "#ff4d4d" },
-            };
-
             return (
               <div
                 key={`${fuel.key}-${i}`}
@@ -359,119 +352,41 @@ function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading, tr, l
                     }}
                   >
                     <div>
-                      <div
-                        style={{
-                          fontSize: 20,
-                          fontWeight: 800,
-                          color: "#fff",
-                          letterSpacing: -0.3,
-                        }}
-                      >
+                      <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.3 }}>
                         {fuel.label}
                       </div>
                     </div>
 
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-end",
-                        gap: 4,
-                      }}
-                    >
-                      {isActive && (
-                        <ShareButton
-                          fuel={fuel}
-                          tr={tr}
-                          lang={lang}
-                          customChangeText={customMsg[fuel.key]?.text || null}
-                        />
-                      )}
-
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: "rgba(255,255,255,0.4)",
-                          fontWeight: 500,
-                        }}
-                      >
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                      {isActive && <ShareButton fuel={fuel} tr={tr} lang={lang} />}
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>
                         {timeStr || "—"}
                       </div>
                     </div>
                   </div>
 
                   <div style={{ marginBottom: 6 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "baseline",
-                        gap: 6,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 54,
-                          fontWeight: 800,
-                          color: "#fff",
-                          letterSpacing: -2,
-                          lineHeight: 1,
-                        }}
-                      >
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                      <span style={{ fontSize: 54, fontWeight: 800, color: "#fff", letterSpacing: -2, lineHeight: 1 }}>
                         {loading ? "—" : fuel.price.toFixed(1)}
                       </span>
-
-                      <span
-                        style={{
-                          fontSize: 16,
-                          fontWeight: 600,
-                          color: "rgba(255,255,255,0.5)",
-                        }}
-                      >
+                      <span style={{ fontSize: 16, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>
                         {tr("home.den")}
                       </span>
                     </div>
 
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "rgba(255,255,255,0.35)",
-                        marginTop: 2,
-                      }}
-                    >
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
                       {fuel.unit}
                     </div>
 
-                    {customMsg[fuel.key] ? (
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: customMsg[fuel.key].color,
-                          marginTop: 6,
-                        }}
-                      >
-                        {customMsg[fuel.key].text}
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: "rgba(255,255,255,0.3)",
-                          marginTop: 6,
-                        }}
-                      >
-                        {tr("home.noChange")}
+                    {PRICE_MESSAGES[fuel.key] && (
+                      <div style={{ fontSize: 12, fontWeight: 700, color: PRICE_MESSAGES[fuel.key].color, marginTop: 6 }}>
+                        {PRICE_MESSAGES[fuel.key].text}
                       </div>
                     )}
                   </div>
 
-                  <div
-                    style={{
-                      marginTop: "auto",
-                      paddingTop: 10,
-                      borderTop: "1px solid rgba(255,255,255,0.1)",
-                    }}
-                  >
+                  <div style={{ marginTop: "auto", paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
                     <Sparkline data={fuel.history} color={fc.spark} height={44} />
                   </div>
                 </div>
