@@ -204,11 +204,14 @@ const translations = {
 
    home: {
   priceChange: {
-    benzin95: "▼ Се намалува за 2.5 ден од полноќ",
-    benzin98: "▼ Се намалува за 3 ден од полноќ",
-    mazut:    "▼ Се намалува за 0.7 ден од полноќ",
-    ekstra:   "▲ Се зголемува за 0.5 ден од полноќ",
-  },
+  benzin95: " -0.5 ден од полноќ",
+  //benzin98: " -X.X ден од полноќ",
+  dizel:    " +2.5 ден од полноќ",
+  //lpg:      " +X.X ден од полноќ",
+  //cng:      " +X.X ден од полноќ",
+  ekstra:   " +3.0 ден од полноќ",
+  mazut:    " +0.9 ден од полноќ",
+},
   units: { perL: "ден/л", perKg: "ден/кг" },
   todayBadge:    "ДЕНЕС",
   heroTitle:     "Цени на горива · Македонија",
@@ -310,14 +313,16 @@ const translations = {
     showLess:    "← Прикажи помалку",
   },
 
-  share: {
+ share: {
     button:    "Сподели",
     viber:     "Viber",
     whatsapp:  "WhatsApp",
     copy:      "Копирај",
+    siteLabel: "Цени на гориво",
+    checkAll:  "Провери ги сите цени",
     message:   "⛽ Цени на гориво — makceni.mk\n\n{{label}}: {{price}} ден/л\n{{changeText}}\n\nПровери ги сите цени: https://makceni.mk",
-    up:        "▲ +{{change}} ден промена",
-    down:      "▼ {{change}} ден промена",
+    up:        " +{{change}} ден промена",
+    down:      " {{change}} ден промена",
     noChange:  "Нема промена",
   },
 
@@ -569,11 +574,14 @@ const translations = {
     },
 
     home: {
-      priceChange: {
-  benzin95: "▼ Ulet për 2.5 den nga mesnata",
-  benzin98: "▼ Ulet për 3 den nga mesnata",
-  mazut:    "▼ Ulet për 0.7 den nga mesnata",
-  ekstra:   "▲ Rritet për 0.5 den nga mesnata",
+priceChange: {
+  benzin95: " -0.5 den nga mesnata",
+  //benzin98: " -X.X den nga mesnata",
+  dizel:    " +2.5 den nga mesnata",
+  //lpg:      " +X.X den nga mesnata",
+  //cng:      " +X.X den nga mesnata",
+  ekstra:   " +3.0 den nga mesnata",
+  mazut:    " +0.9 den nga mesnata",
 },
       units: { perL: "den/l", perKg: "den/kg" },
       todayBadge:    "SOT",
@@ -675,14 +683,16 @@ berza: {
         showLess:    "← Shfaq më pak",
       },
 
-      share: {
+    share: {
         button:    "Shpërndaj",
         viber:     "Viber",
         whatsapp:  "WhatsApp",
         copy:      "Kopjo",
+        siteLabel: "Çmimet e karburantit",
+        checkAll:  "Shiko të gjitha çmimet",
         message:   "⛽ Çmimet e karburantit — makceni.mk\n\n{{label}}: {{price}} den/l\n{{changeText}}\n\nShiko të gjitha çmimet: https://makceni.mk",
-        up:        "▲ +{{change}} den ndryshim",
-        down:      "▼ {{change}} den ndryshim",
+        up:        " +{{change}} den ndryshim",
+        down:      " {{change}} den ndryshim",
         noChange:  "Pa ndryshim",
       },
 
@@ -933,11 +943,14 @@ mapa: {
     },
 
     home: {
-      priceChange: {
-  benzin95: "▼ Decreasing by 2.5 den from midnight",
-  benzin98: "▼ Decreasing by 3 den from midnight",
-  mazut:    "▼ Decreasing by 0.7 den from midnight",
-  ekstra:   "▲ Increasing by 0.5 den from midnight",
+priceChange: {
+  benzin95: " -0.5 den from midnight",
+  //benzin98: " -X.X den from midnight",
+  dizel:    " +2.5 den from midnight",
+  //lpg:      " +X.X den from midnight",
+  //cng:      " +X.X den from midnight",
+  ekstra:   " +3.0 den from midnight",
+  mazut:    " +0.9 den from midnight",
 },
       units: { perL: "den/L", perKg: "den/kg" },
       todayBadge:    "TODAY",
@@ -1040,16 +1053,18 @@ mapa: {
         showLess:    "← Show less",
       },
 
-      share: {
+share: {
         button:    "Share",
         viber:     "Viber",
         whatsapp:  "WhatsApp",
         copy:      "Copy",
+        siteLabel: "Fuel prices",
+        checkAll:  "Check all prices",
         message:   "⛽ Fuel prices — makceni.mk\n\n{{label}}: {{price}} den/L\n{{changeText}}\n\nCheck all prices: https://makceni.mk",
-        up:        "▲ +{{change}} den change",
-        down:      "▼ {{change}} den change",
+        up:        " +{{change}} den change",
+        down:      " {{change}} den change",
         noChange:  "No change",
-      },
+      },  
 
       footer: {
         disclaimer: "Prices are indicative and may differ at the point of sale.",
@@ -1299,11 +1314,14 @@ mapa: {
     },
 
     home: {
-      priceChange: {
-  benzin95: "▼ Geceyarısından itibaren 2.5 den düşüyor",
-  benzin98: "▼ Geceyarısından itibaren 3 den düşüyor",
-  mazut:    "▼ Geceyarısından itibaren 0.7 den düşüyor",
-  ekstra:   "▲ Geceyarısından itibaren 0.5 den artıyor",
+priceChange: {
+  benzin95: " -0.5 den geceyarısından itibaren",
+  //benzin98: " -X.X den geceyarısından itibaren",
+  dizel:    " +2.5 den geceyarısından itibaren",
+  //lpg:      " +X.X den geceyarısından itibaren",
+  //cng:      " +X.X den geceyarısından itibaren",
+  ekstra:   " +3.0 den geceyarısından itibaren",
+  mazut:    " +0.9 den geceyarısından itibaren",
 },
       units: { perL: "den/L", perKg: "den/kg" },
       todayBadge:    "BUGÜN",
@@ -1406,14 +1424,16 @@ mapa: {
         showLess:    "← Daha az göster",
       },
 
-      share: {
+share: {
         button:    "Paylaş",
         viber:     "Viber",
         whatsapp:  "WhatsApp",
         copy:      "Kopyala",
+        siteLabel: "Yakıt fiyatları",
+        checkAll:  "Tüm fiyatları gör",
         message:   "⛽ Yakıt fiyatları — makceni.mk\n\n{{label}}: {{price}} den/L\n{{changeText}}\n\nTüm fiyatları kontrol et: https://makceni.mk",
-        up:        "▲ +{{change}} den değişim",
-        down:      "▼ {{change}} den değişim",
+        up:        " +{{change}} den değişim",
+        down:      " {{change}} den değişim",
         noChange:  "Değişim yok",
       },
 

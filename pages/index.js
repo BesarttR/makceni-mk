@@ -1,3 +1,4 @@
+import ReactDOM from "react-dom";
 import { useState, useEffect, useRef, createContext, useContext } from "react";
 import Head from "next/head";
 import { useLanguage, LanguageSwitcher } from "../translations";
@@ -81,13 +82,13 @@ const FUEL_ACCENT = {
 };
 
 const FALLBACK = [
-  { key:"benzin95", label:"Бензин 95",   unit:"ден/л",  price:86.5, change:7.0,  history:[74,75,76,77,78,79,80,79,80,82,83,84,85,86,86.5], message:"-0.5 ден од полноќ " },
-  { key:"benzin98", label:"Бензин 98+",  unit:"ден/л",  price:88.5, change:7.0,  history:[76,77,78,79,80,81,82,81,82,84,85,86,87,88,88.5], message:"" },
-  { key:"dizel",    label:"Дизел",        unit:"ден/л",  price:92.0, change:6.5,  history:[78,79,80,81,82,83,84,83,84,86,87,88,90,91,92],   message:"+2.5 ден од полноќ" },
-  { key:"lpg",      label:"Плин LPG",     unit:"ден/л",  price:53.0, change:0,    history:[50,51,51,52,52,53,53,53,53,53,53,53,53,53,53],   message:"" },
-  { key:"cng",      label:"Метан CNG",    unit:"ден/кг", price:60.0, change:0,    history:[58,58,59,59,60,60,60,60,60,60,60,60,60,60,60],   message:"" },
-  { key:"ekstra",   label:"Екстра Лесно", unit:"ден/л",  price:89.5, change:7.0,  history:[75,76,77,78,79,80,81,80,81,83,84,85,87,88,89.5], message:"+ 3.0 ден од полноќ" },
-  { key:"mazut",    label:"Мазут",        unit:"ден/л",  price:47.5, change:4.9,  history:[38,39,40,40,41,42,42,43,43,44,45,45,46,47,47.5], message:"+ 0.9 ден од полноќ" },
+  { key:"benzin95", label:"Бензин 95",   unit:"ден/л",  price:86.5, change:7.0,  history:[74,75,76,77,78,79,80,79,80,82,83,84,85,86,86.5], },
+  { key:"benzin98", label:"Бензин 98+",  unit:"ден/л",  price:88.5, change:7.0,  history:[76,77,78,79,80,81,82,81,82,84,85,86,87,88,88.5], },
+  { key:"dizel",    label:"Дизел",        unit:"ден/л",  price:92.0, change:6.5,  history:[78,79,80,81,82,83,84,83,84,86,87,88,90,91,92], },
+  { key:"lpg",      label:"Плин LPG",     unit:"ден/л",  price:53.0, change:0,    history:[50,51,51,52,52,53,53,53,53,53,53,53,53,53,53],  },
+  { key:"cng",      label:"Метан CNG",    unit:"ден/кг", price:60.0, change:0,    history:[58,58,59,59,60,60,60,60,60,60,60,60,60,60,60], },
+  { key:"ekstra",   label:"Екстра Лесно", unit:"ден/л",  price:89.5, change:7.0,  history:[75,76,77,78,79,80,81,80,81,83,84,85,87,88,89.5],},
+  { key:"mazut",    label:"Мазут",        unit:"ден/л",  price:47.5, change:4.9,  history:[38,39,40,40,41,42,42,43,43,44,45,45,46,47,47.5],},
 ];
 
 const FALLBACK_HISTORY = {
@@ -212,47 +213,89 @@ function Sparkline({ data, color, height=56 }) {
 function ShareButton({ fuel, tr }) {
   const T = useT();
   const [showMenu, setShowMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+  const btnRef = useRef(null);
   const ref = useRef(null);
+
   useEffect(() => {
-    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setShowMenu(false); };
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target) && !btnRef.current.contains(e.target)) setShowMenu(false); };
     document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
+    document.addEventListener("touchstart", h);
+    return () => { document.removeEventListener("mousedown", h); document.removeEventListener("touchstart", h); };
   }, []);
-  const changeText = fuel.change>0 ? tr("home.share.up",{change:fuel.change.toFixed(1)}) : fuel.change<0 ? tr("home.share.down",{change:fuel.change.toFixed(1)}) : tr("home.share.noChange");
-  const siteLabel = {mk:"Цени на гориво",sq:"Çmimet e karburantit",en:"Fuel prices",tr:"Yakıt fiyatları"}[tr("_lang")]||"Цени на гориво";
-  const checkAll = {mk:"Провери ги сите цени",sq:"Shiko të gjitha çmimet",en:"Check all prices",tr:"Tüm fiyatları gör"}[tr("_lang")]||"Провери ги сите цени";
-  const msg = `⛽ ${siteLabel} — makceni.mk\n\n${fuel.label}: ${fuel.price.toFixed(1)} ${tr("home.den")}/${fuel.unit.split("/")[1]||"л"}\n${changeText}\n\n${checkAll}: https://makceni.mk`;
+
+  const handleOpen = (e) => {
+    e.stopPropagation();
+    if (!showMenu && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setMenuPos({ top: rect.bottom + window.scrollY + 8, right: window.innerWidth - rect.right });
+    }
+    setShowMenu(m => !m);
+  };
+
+  const priceMsg = tr(`home.priceChange.${fuel.key}`);
+  const hasPriceMsg = priceMsg !== `home.priceChange.${fuel.key}`;
+  const changeText = fuel.change > 0
+    ? tr("home.share.up", { change: fuel.change.toFixed(1) })
+    : fuel.change < 0
+    ? tr("home.share.down", { change: fuel.change.toFixed(1) })
+    : hasPriceMsg ? priceMsg : tr("home.share.noChange");
+
+    const siteLabel = tr("home.share.siteLabel");
+const checkAll = tr("home.share.checkAll");
+  const msg = `⛽ ${siteLabel} — makceni.mk\n\n${fuel.label}: ${fuel.price.toFixed(1)} ${tr("home.den")}/${fuel.unit.split("/")[1] || "л"}\n${changeText}\n\n${checkAll}: https://makceni.mk`;
   const enc = encodeURIComponent(msg);
-  return (
-    <div ref={ref} style={{ position:"relative" }}>
-      <button onClick={(e)=>{ e.stopPropagation(); setShowMenu(m=>!m); }}
-        style={{ background:"rgba(124,58,237,0.2)", border:"1px solid rgba(124,58,237,0.35)", borderRadius:8, padding:"4px 9px", cursor:"pointer", fontSize:11, fontWeight:600, color:T.violetLight, display:"flex", alignItems:"center", gap:4, transition:"all 0.15s", backdropFilter:"blur(8px)" }}
-        onMouseEnter={e=>e.currentTarget.style.background="rgba(124,58,237,0.35)"}
-        onMouseLeave={e=>e.currentTarget.style.background="rgba(124,58,237,0.2)"}
-      ><span style={{fontSize:13}}>📤</span>{tr("home.share.button")}</button>
-      {showMenu && (
-        <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, background:T.surface, backdropFilter:"blur(20px)", border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", boxShadow:`0 16px 48px rgba(0,0,0,0.15),0 0 0 1px ${T.violetBdr}`, zIndex:200, minWidth:160, animation:"fadeUp 0.15s ease" }}>
-          {[{icon:"💬",label:tr("home.share.viber"),href:`viber://forward?text=${enc}`},{icon:"🟢",label:tr("home.share.whatsapp"),href:`https://wa.me/?text=${enc}`}].map((item,i)=>(
-            <div key={i}>
-              <a href={item.href} target="_blank" rel="noopener noreferrer"
-                style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 16px", textDecoration:"none", color:T.text, fontSize:13, fontWeight:600 }}
-                onMouseEnter={e=>e.currentTarget.style.background=T.surface2}
-                onMouseLeave={e=>e.currentTarget.style.background="transparent"}
-              ><span style={{fontSize:17}}>{item.icon}</span>{item.label}</a>
-              <div style={{height:1,background:T.border}} />
-            </div>
-          ))}
-          <button onClick={()=>{ navigator.clipboard?.writeText(msg); setShowMenu(false); }}
-            style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 16px", width:"100%", background:"none", border:"none", cursor:"pointer", color:T.text, fontSize:13, fontWeight:600, fontFamily:"inherit" }}
-            onMouseEnter={e=>e.currentTarget.style.background=T.surface2}
-            onMouseLeave={e=>e.currentTarget.style.background="transparent"}
-          ><span style={{fontSize:17}}>📋</span>{tr("home.share.copy")}</button>
+
+  const menu = showMenu ? (
+    <div ref={ref} style={{
+      position: "absolute",
+      top: menuPos.top,
+      right: menuPos.right,
+      background: T.surface,
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      border: `1px solid ${T.border}`,
+      borderRadius: 12,
+      overflow: "hidden",
+      boxShadow: `0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px ${T.violetBdr}`,
+      zIndex: 99999,
+      minWidth: 160,
+      animation: "fadeUp 0.15s ease",
+    }}>
+      {[
+        { icon: "💬", label: tr("home.share.viber"), href: `viber://forward?text=${enc}` },
+        { icon: "🟢", label: tr("home.share.whatsapp"), href: `https://api.whatsapp.com/send?text=${enc}` }
+      ].map((item, i) => (
+        <div key={i}>
+          <div
+            onClick={() => { window.location.href = item.href; setShowMenu(false); }}
+            style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 16px", color:T.text, fontSize:13, fontWeight:600, cursor:"pointer" }}
+            onMouseEnter={e => e.currentTarget.style.background = T.surface2}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          ><span style={{ fontSize: 17 }}>{item.icon}</span>{item.label}</div>
+          <div style={{ height: 1, background: T.border }} />
         </div>
-      )}
+      ))}
+      <div
+        onClick={() => { navigator.clipboard?.writeText(msg); setShowMenu(false); }}
+        style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 16px", color:T.text, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}
+        onMouseEnter={e => e.currentTarget.style.background = T.surface2}
+        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+      ><span style={{ fontSize: 17 }}>📋</span>{tr("home.share.copy")}</div>
     </div>
+  ) : null;
+
+  return (
+    <>
+      <button ref={btnRef} onClick={handleOpen}
+        style={{ background:"rgba(124,58,237,0.2)", border:"1px solid rgba(124,58,237,0.35)", borderRadius:8, padding:"4px 9px", cursor:"pointer", fontSize:11, fontWeight:600, color:T.violetLight, display:"flex", alignItems:"center", gap:4, transition:"all 0.15s", backdropFilter:"blur(8px)" }}
+        onMouseEnter={e => e.currentTarget.style.background = "rgba(124,58,237,0.35)"}
+        onMouseLeave={e => e.currentTarget.style.background = "rgba(124,58,237,0.2)"}
+      ><span style={{ fontSize: 13 }}>📤</span>{tr("home.share.button")}</button>
+      {typeof document !== "undefined" && menu && ReactDOM.createPortal(menu, document.body)}
+    </>
   );
 }
-
 function CarouselCard({ fuel, position, onClick, timeStr, loading, tr, isDark }) {
   const T = useT();
   if (Math.abs(position) >= 3) return null;
@@ -281,7 +324,7 @@ const cardShadow = isCenter
   return (
     <div onClick={() => isAdj && onClick()} style={{ position:"absolute", left:"50%", top:"50%", width:CARD_W, transform:`translate(calc(-50% + ${xOff}px), calc(-50% + ${yOff}px))`, transition:"all 0.5s cubic-bezier(0.34,1.56,0.64,1)", zIndex:zIdx, cursor:isAdj?"pointer":"default" }}>
       {isCenter && <div style={{ position:"absolute", inset:-20, borderRadius:32, background:`radial-gradient(ellipse at center, ${accent}18 0%, transparent 70%)`, pointerEvents:"none", zIndex:-1 }} />}
-      <div style={{ background:cardBg, backdropFilter:"blur(28px)", WebkitBackdropFilter:"blur(28px)", borderRadius:24, padding:"26px 26px 18px", minHeight:295, display:"flex", flexDirection:"column", justifyContent:"space-between", position:"relative", overflow:"hidden", border:cardBorder, boxShadow:cardShadow }}>
+      <div style={{ background:cardBg, backdropFilter:"blur(28px)", WebkitBackdropFilter:"blur(28px)", borderRadius:24, padding:"26px 26px 18px", minHeight:295, display:"flex", flexDirection:"column", justifyContent:"space-between", position:"relative", overflow:"visible", border:cardBorder, boxShadow:cardShadow }}>
         <div style={{ position:"absolute", top:0, left:0, right:0, height:1, background:isDark?`linear-gradient(90deg,transparent,rgba(140,160,255,.65),transparent)`:`linear-gradient(90deg,transparent,rgba(124,58,237,.2),transparent)`, pointerEvents:"none" }} />
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
           <span style={{ fontSize:22, fontWeight:700, color:labelColor, letterSpacing:-0.3 }}>{fuel.label}</span>
@@ -297,13 +340,16 @@ const cardShadow = isCenter
             </span>
             <span style={{ fontSize:18, fontWeight:600, color:isDark?"rgba(255,255,255,0.45)":T.muted, letterSpacing:1 }}>MKD</span>
           </div>
-          {hasChange ? (
+     {hasChange && (
             <div style={{ display:"flex", alignItems:"baseline", gap:6, marginTop:4 }}>
               <span style={{ fontSize:24, fontWeight:700, color:fuel.change>0?T.red:T.cyan, letterSpacing:-0.5 }}>{fuel.change>0?"+":"-"}{Math.abs(parseFloat(pct))}%</span>
               <span style={{ fontSize:13, color:isDark?"rgba(255,255,255,0.3)":T.muted, fontWeight:500 }}>{fuel.change>0?"↑":"↓"} {Math.abs(fuel.change).toFixed(1)} {tr("home.den")}</span>
             </div>
-          ) : (
-            <div style={{ fontSize:13, color:msgColor, marginTop:4 }}>{fuel.message || "Нема промена"}</div>
+          )}
+          {tr(`home.priceChange.${fuel.key}`) !== `home.priceChange.${fuel.key}` && (
+            <div style={{ fontSize:13, color:msgColor, marginTop:4 }}>
+              {tr(`home.priceChange.${fuel.key}`)}
+            </div>
           )}
         </div>
         <div style={{ marginTop:"auto", paddingTop:14, borderTop:isDark?"1px solid rgba(255,255,255,0.06)":`1px solid ${T.border}` }}>
@@ -356,7 +402,7 @@ function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading, tr, i
     const msgColor=isDark?"rgba(255,255,255,0.2)":T.muted;
     return (
       <div key={fuel.key} onClick={()=>!isCenter&&onSelect(position===-1?prev:next)} style={{ position:"absolute", top:"50%", left:"50%", width:CARD_W, transform:`translate(calc(-50% + ${xOff+dragX}px), calc(-50% + ${yOff}px)) scale(${scale})`, transition:dragX!==0?"none":"transform 0.45s cubic-bezier(0.34,1.4,0.64,1)", zIndex:zIdx, cursor:isCenter?"default":"pointer", willChange:"transform", transformOrigin:"center center" }}>
-        <div style={{ background:cardBg, backdropFilter:"blur(28px)", WebkitBackdropFilter:"blur(28px)", border:cardBorder, borderRadius:22, padding:"20px 20px 14px", minHeight:260, display:"flex", flexDirection:"column", justifyContent:"space-between", position:"relative", overflow:"hidden", boxShadow:cardShadow }}>
+        <div style={{ background:cardBg, backdropFilter:"blur(28px)", WebkitBackdropFilter:"blur(28px)", border:cardBorder, borderRadius:22, padding:"20px 20px 14px", minHeight:260, display:"flex", flexDirection:"column", justifyContent:"space-between", position:"relative", overflow:"visible", boxShadow:cardShadow }}>
           <div style={{ position:"absolute", top:0, left:0, right:0, height:1, background:isDark?`linear-gradient(90deg,transparent,rgba(140,160,255,.6),transparent)`:`linear-gradient(90deg,transparent,rgba(124,58,237,.15),transparent)`, pointerEvents:"none" }} />
           {isCenter&&<div style={{ position:"absolute", inset:-16, borderRadius:30, background:`radial-gradient(ellipse at center,${accent}14 0%,transparent 68%)`, pointerEvents:"none", zIndex:0 }} />}
           <div style={{ position:"relative", zIndex:1, display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
@@ -373,13 +419,16 @@ function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading, tr, i
               </span>
               <span style={{ fontSize:14, fontWeight:600, color:isDark?"rgba(255,255,255,0.4)":T.muted, letterSpacing:0.8 }}>MKD</span>
             </div>
-            {hasChange ? (
+       {hasChange && (
               <div style={{ display:"flex", alignItems:"baseline", gap:5 }}>
                 <span style={{ fontSize:20, fontWeight:700, color:fuel.change>0?T.red:T.cyan }}>{fuel.change>0?"+":"-"}{Math.abs(parseFloat(pct))}%</span>
                 <span style={{ fontSize:11, color:isDark?"rgba(255,255,255,0.25)":T.muted }}>{Math.abs(fuel.change).toFixed(1)} {tr("home.den")}</span>
               </div>
-            ) : (
-              <div style={{ fontSize:11, color:msgColor }}>{fuel.message||"Нема промена"}</div>
+            )}
+            {tr(`home.priceChange.${fuel.key}`) !== `home.priceChange.${fuel.key}` && (
+              <div style={{ fontSize:11, color:msgColor }}>
+                {tr(`home.priceChange.${fuel.key}`)}
+              </div>
             )}
           </div>
           <div style={{ position:"relative", zIndex:1, marginTop:"auto", paddingTop:10, borderTop:isDark?"1px solid rgba(255,255,255,0.06)":`1px solid ${T.border}` }}>
@@ -392,7 +441,7 @@ function MobileCarousel({ fuelData, activeIdx, onSelect, timeStr, loading, tr, i
 
   return (
     <div style={{ position:"relative" }}>
-      <div ref={containerRef} style={{ position:"relative", height:310, overflow:"hidden", userSelect:"none", WebkitUserSelect:"none", touchAction:"pan-y" }}>
+      <div ref={containerRef} style={{ position:"relative", height:310, overflow:"visible", userSelect:"none", WebkitUserSelect:"none", touchAction:"pan-y" }}>
         {renderCard(fuelData[prev],-1)}
         {renderCard(fuelData[next],1)}
         {renderCard(fuelData[activeIdx],0)}
@@ -982,7 +1031,7 @@ background: scrolled
                 </div>
               ):(
                 <>
-                  <div style={{ position:"relative", height:400, marginBottom:40 }}>
+                  <div style={{ position:"relative", height:400, marginBottom:40, overflow:"visible" }}>
                     {fuelData.map((fuel,i)=>{ const pos=i-activeIdx; const wrapped=pos>Math.floor(fuelData.length/2)?pos-fuelData.length:pos<-Math.floor(fuelData.length/2)?pos+fuelData.length:pos; return <CarouselCard key={fuel.key} fuel={fuel} position={wrapped} timeStr={timeStr} loading={loading} onClick={()=>handleSelect(i)} tr={tr} isDark={isDark} />; })}
                   </div>
                   <div style={{ display:"flex", justifyContent:"center", gap:8, marginBottom:64, flexWrap:"wrap" }}>
