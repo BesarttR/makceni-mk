@@ -231,12 +231,12 @@ const GORIVO_CAMERAS = [
   { id: 218, lat: 41.99706852514068, lng: 21.55495702791909 },
 ];
 export default async function handler(req, res) {
-  const origin = req.headers.origin ?? req.headers.referer ?? "";
-  const allowed = ALLOWED_ORIGINS.some(o => origin.startsWith(o));
+const origin = req.headers.origin ?? req.headers.referer ?? "";
+const allowed = ALLOWED_ORIGINS.some(o => origin.startsWith(o));
 
-  if (!allowed) {
-    return res.status(403).json({ error: "Forbidden" });
-  }
+if (origin && !allowed) {
+  return res.status(403).json({ error: "Forbidden" });
+}
 
   if (cache && cacheTime && Date.now() - cacheTime < CACHE_DURATION) {
     return res.status(200).json(cache);

@@ -64,7 +64,7 @@ const LANG_META = {
   tr: { flag: "🇹🇷", short: "TR", full: "Türkçe"       },
 };
 
-export function LanguageSwitcher({ lang, setLang, isMobile = false, style = {} }) {
+export function LanguageSwitcher({ lang, setLang, isMobile = false, style = {}, isDark = true }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -97,14 +97,15 @@ export function LanguageSwitcher({ lang, setLang, isMobile = false, style = {} }
           style={{
             display: "flex", alignItems: "center", gap: 6,
             padding: "6px 11px", borderRadius: 9,
-            border: `1px solid ${open ? "#FED7AA" : "#E4E1DA"}`,
-            background: open ? "#FFF7ED" : "#FFFFFF",
-            color: open ? "#F97316" : "#57534E",
+    border: `1px solid ${open ? "rgba(124,58,237,0.5)" : isDark ? "rgba(60,70,140,0.4)" : "rgba(0,0,0,0.15)"}`,
+background: open ? isDark ? "rgba(20,20,40,0.95)" : "rgba(255,255,255,0.95)" : isDark ? "rgba(10,10,22,0.85)" : "rgba(255,255,255,0.85)",
+color: open ? "#7C3AED" : isDark ? "#9090B8" : "#57534E",
+backdropFilter: "blur(12px)",
             fontSize: 13, fontWeight: 700, cursor: "pointer",
             fontFamily: "inherit", transition: "all 0.15s",
           }}
-          onMouseEnter={e => { if (!open) { e.currentTarget.style.borderColor = "#C9C6BE"; e.currentTarget.style.color = "#1C1917"; } }}
-          onMouseLeave={e => { if (!open) { e.currentTarget.style.borderColor = "#E4E1DA"; e.currentTarget.style.color = "#57534E"; } }}
+onMouseEnter={e => { if (!open) { e.currentTarget.style.borderColor = "rgba(100,120,255,0.5)"; e.currentTarget.style.color = "#F0F0FF"; } }}
+onMouseLeave={e => { if (!open) { e.currentTarget.style.borderColor = "rgba(60,70,140,0.4)"; e.currentTarget.style.color = "#9090B8"; } }}
         >
           <span style={{ fontSize: 15, lineHeight: 1 }}>{current.flag}</span>
           <span>{current.short}</span>
@@ -117,9 +118,11 @@ export function LanguageSwitcher({ lang, setLang, isMobile = false, style = {} }
         {open && (
           <div style={{
             position: "absolute", top: "calc(100% + 6px)", right: 0,
-            minWidth: 160, background: "#FFFFFF",
-            border: "1px solid #E4E1DA", borderRadius: 12, overflow: "hidden",
-            boxShadow: "0 8px 28px rgba(0,0,0,0.10)", zIndex: 200,
+minWidth: 160, background: isDark ? "rgba(8,8,20,0.97)" : "rgba(255,255,255,0.98)",
+backdropFilter: "blur(20px)",
+WebkitBackdropFilter: "blur(20px)",
+border: `1px solid ${isDark ? "rgba(60,70,140,0.4)" : "rgba(0,0,0,0.1)"}`, borderRadius: 12, overflow: "hidden",
+boxShadow: isDark ? "0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(100,120,255,0.1)" : "0 16px 48px rgba(0,0,0,0.1), 0 0 0 1px rgba(124,58,237,0.1)",
             animation: "langFadeUp 0.14s ease",
           }}>
             {LANGUAGES.map((l, i) => {
@@ -135,19 +138,19 @@ export function LanguageSwitcher({ lang, setLang, isMobile = false, style = {} }
                     cursor: "pointer",
                     fontSize: isMobile ? 14 : 13,
                     fontWeight: isActive ? 700 : 600,
-                    color: isActive ? "#F97316" : "#1C1917",
-                    background: isActive ? "#FFF7ED" : "transparent",
-                    borderBottom: i < LANGUAGES.length - 1 ? "1px solid #E4E1DA" : "none",
+                color: isActive ? "#7C3AED" : isDark ? "#9090B8" : "#57534E",
+background: isActive ? "rgba(124,58,237,0.1)" : "transparent",
+borderBottom: i < LANGUAGES.length - 1 ? `1px solid ${isDark ? "rgba(60,70,140,0.3)" : "rgba(0,0,0,0.07)"}` : "none", 
                     transition: "background 0.12s",
                   }}
-                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "#F1F0ED"; }}
-                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
                 >
                   <span style={{ fontSize: isMobile ? 18 : 16 }}>{meta.flag}</span>
                   <span>{meta.full}</span>
                   {isActive && (
                     <svg style={{ marginLeft: "auto", flexShrink: 0 }} width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M2.5 7l3 3 6-6" stroke="#F97316" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M2.5 7l3 3 6-6" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   )}
                 </div>
@@ -167,7 +170,7 @@ const translations = {
   // MACEDONIAN (default)
   // ══════════════════════════════════════════════════════════════════
   mk: {
-"home.share.message": "⛽ Цени на гориво — makceni.mk\n\n{label}: {price} ден/л\n{changeText}\n\nПровери ги сите цени: https://makceni.mk",
+"home.share.message": " Цени на гориво — makceni.mk\n\n{label}: {price} ден/л\n{changeText}\n\nПровери ги сите цени: https://makceni.mk",
     stationPrices: {
     title: "Цени на горива",
     station: "Станица",
@@ -214,7 +217,7 @@ const translations = {
   den:           "ден",
 
   stationTable: {
-    title:     "⛽ Цени на пумпа",
+    title:     "Цени на пумпа",
     subtitle:  "Цени по бензински",
     subtitleWithTime: "Ажурирано {{time}} ·",
     station:   "Бензинска",
@@ -256,7 +259,7 @@ const translations = {
   },
 
   carProfile: {
-    title:       "🚗 Мојот автомобил",
+    title:       "Мојот автомобил",
     subtitle:    "Персонализирани трошоци за возење",
     modelLabel:  "Модел на возило",
     modelPlaceholder: "пр. VW Golf 5",
@@ -329,7 +332,7 @@ const translations = {
       pageTitle:    "Safe City — Makceni.mk",
       headerTitle:  "Safe City",
       camerasCount: "{{count}} камери",
-      camerasCountMobile: "{{count}}📷",
+      camerasCountMobile: "{{count}}",
       reportBtn:    "+ Пријави камера",
       cancelBtn:    "✕ Откажи",
       gasStationsBtn: "Бензинcки",
@@ -345,8 +348,8 @@ const translations = {
         warningLabel:   "Предупредување",
         gpsOn:          "GPS активен",
         gpsOff:         "Вклучи GPS",
-        gpsHint:        "💡 Вклучи GPS за да добиваш предупредувања за Safe City камери",
-        soundHint:      "🔔 Ќе слушнете звук кога ќе се приближите до камера на {{dist}}м",
+        gpsHint:        "Вклучи GPS за да добиваш предупредувања за Safe City камери",
+        soundHint:      "Ќе слушнете звук кога ќе се приближите до камера на {{dist}}м",
         soundLabel:     "Звук при приближување",
         osmLink:        "© OpenStreetMap",
       },
@@ -356,8 +359,8 @@ const translations = {
         gpsOff:   "GPS",
         report:   "+ Пријави",
         cancel:   "✕",
-        hint:     "💡 Вклучи GPS за предупредувања за камери",
-        soundHint:"🔔 Звук при приближување до камера на {{dist}}м",
+        hint:     "Вклучи GPS за предупредувања за камери",
+        soundHint:"Звук при приближување до камера на {{dist}}м",
       },
 
       errors: {
@@ -418,7 +421,7 @@ const translations = {
   },
 
   locate: {
-    button:    "📍 Најблиска бензинска",
+    button:    "Најблиска бензинска",
     locating:  "Пронаоѓање...",
     found:     "✓ {{name}}",
     nearest:   "Најблиска",
@@ -533,7 +536,7 @@ const translations = {
   // ALBANIAN
   // ══════════════════════════════════════════════════════════════════
   sq: {
- "home.share.message": "⛽ Çmimet e karburantit — makceni.mk\n\n{label}: {price} den/l\n{changeText}\n\nShiko të gjitha çmimet: https://makceni.mk",
+ "home.share.message": " Çmimet e karburantit — makceni.mk\n\n{label}: {price} den/l\n{changeText}\n\nShiko të gjitha çmimet: https://makceni.mk",
     stationPrices: {
     title: "Çmimet e karburantit",
     station: "Stacioni",
@@ -580,7 +583,7 @@ const translations = {
       den:           "den",
 
       stationTable: {
-        title:     "⛽ Çmimet në pompë",
+        title:     "Çmimet në pompë",
         subtitle:  "Çmimet sipas pompave të benzinës",
         subtitleWithTime: "Përditësuar {{time}} · ",
         station:   "Pompa",
@@ -622,7 +625,7 @@ const translations = {
       },
 
       carProfile: {
-        title:       "🚗 Makina ime",
+        title:       "Makina ime",
         subtitle:    "Kostot personale të drejtimit",
         modelLabel:  "Modeli i automjetit",
         modelPlaceholder: "p.sh. VW Golf 5",
@@ -695,7 +698,7 @@ berza: {
       pageTitle:    "Safe City — Makceni.mk",
       headerTitle:  "Safe City",
       camerasCount: "{{count}} kamera",
-      camerasCountMobile: "{{count}}📷",
+      camerasCountMobile: "{{count}}",
       reportBtn:    "+ Raporto kamerë",
       cancelBtn:    "✕ Anulo",
       gasStationsBtn: "Benzinore",
@@ -711,8 +714,8 @@ berza: {
         warningLabel:   "Paralajmërim",
         gpsOn:          "GPS aktiv",
         gpsOff:         "Aktivizo GPS",
-        gpsHint:        "💡 Aktivizo GPS për të marrë paralajmërime për kamerat Safe City",
-        soundHint:      "🔔 Do dëgjoni zë kur i afroheni një kamere në {{dist}}m",
+        gpsHint:        "Aktivizo GPS për të marrë paralajmërime për kamerat Safe City",
+        soundHint:      "Do dëgjoni zë kur i afroheni një kamere në {{dist}}m",
         soundLabel:     "Zë gjatë afrimit",
         osmLink:        "© OpenStreetMap",
       },
@@ -722,8 +725,8 @@ berza: {
         gpsOff:   "GPS",
         report:   "+ Raporto",
         cancel:   "✕",
-        hint:     "💡 Aktivizo GPS për paralajmërime kamerash",
-        soundHint:"🔔 Zë kur i afrohesh kamerës në {{dist}}m",
+        hint:     "Aktivizo GPS për paralajmërime kamerash",
+        soundHint:"Zë kur i afrohesh kamerës në {{dist}}m",
       },
 
       errors: {
@@ -784,7 +787,7 @@ mapa: {
   },
 
   locate: {
-    button:    "📍 Pompa e benzinës më e afërt",
+    button:    "Pompa e benzinës më e afërt",
     locating:  "Duke gjetur...",
     found:     "✓ {{name}}",
     nearest:   "Më e afërt",
@@ -897,7 +900,7 @@ mapa: {
   // ENGLISH
   // ══════════════════════════════════════════════════════════════════
   en: {
-  "home.share.message": "⛽ Fuel prices — makceni.mk\n\n{label}: {price} den/L\n{changeText}\n\nCheck all prices: https://makceni.mk",
+  "home.share.message": " Fuel prices — makceni.mk\n\n{label}: {price} den/L\n{changeText}\n\nCheck all prices: https://makceni.mk",
     stationPrices: {
     title: "Fuel Prices",
     station: "Station",
@@ -944,7 +947,7 @@ mapa: {
       den:           "den",
 
       stationTable: {
-        title:     "⛽ Pump Prices",
+        title:     "Pump Prices",
         subtitle:  "Prices by gas station",
         subtitleWithTime: "Updated {{time}} ",
         station:   "Gas Station",
@@ -986,7 +989,7 @@ mapa: {
       },
 
       carProfile: {
-        title:       "🚗 My Car",
+        title:       "My Car",
         subtitle:    "Personalized driving costs",
         modelLabel:  "Vehicle model",
         modelPlaceholder: "e.g. VW Golf 5",
@@ -1060,7 +1063,7 @@ mapa: {
       pageTitle:    "Safe City — Makceni.mk",
       headerTitle:  "Safe City",
       camerasCount: "{{count}} cameras",
-      camerasCountMobile: "{{count}}📷",
+      camerasCountMobile: "{{count}}",
       reportBtn:    "+ Report camera",
       cancelBtn:    "✕ Cancel",
       gasStationsBtn: "Gas Stations",
@@ -1076,8 +1079,8 @@ mapa: {
         warningLabel:   "Warning",
         gpsOn:          "GPS active",
         gpsOff:         "Enable GPS",
-        gpsHint:        "💡 Enable GPS to receive Safe City camera warnings",
-        soundHint:      "🔔 You will hear a sound when within {{dist}}m of a camera",
+        gpsHint:        "Enable GPS to receive Safe City camera warnings",
+        soundHint:      "You will hear a sound when within {{dist}}m of a camera",
         soundLabel:     "Sound on approach",
         osmLink:        "© OpenStreetMap",
       },
@@ -1087,8 +1090,8 @@ mapa: {
         gpsOff:   "GPS",
         report:   "+ Report",
         cancel:   "✕",
-        hint:     "💡 Enable GPS for camera warnings",
-        soundHint:"🔔 Sound when approaching camera at {{dist}}m",
+        hint:     "Enable GPS for camera warnings",
+        soundHint:"Sound when approaching camera at {{dist}}m",
       },
 
       errors: {
@@ -1149,7 +1152,7 @@ mapa: {
   },
 
   locate: {
-    button:    "📍 Nearest gas station",
+    button:    "Nearest gas station",
     locating:  "Finding...",
     found:     "✓ {{name}}",
     nearest:   "Nearest",
@@ -1263,7 +1266,7 @@ mapa: {
   // TURKISH
   // ══════════════════════════════════════════════════════════════════
   tr: {
-"home.share.message": "⛽ Yakıt fiyatları — makceni.mk\n\n{label}: {price} den/L\n{changeText}\n\nTüm fiyatları gör: https://makceni.mk",
+"home.share.message": " Yakıt fiyatları — makceni.mk\n\n{label}: {price} den/L\n{changeText}\n\nTüm fiyatları gör: https://makceni.mk",
       stationPrices: {
     title: "Yakıt Fiyatları",
     station: "İstasyon",
@@ -1310,7 +1313,7 @@ mapa: {
       den:           "den",
 
       stationTable: {
-        title:     "⛽ Pompa Fiyatları",
+        title:     "Pompa Fiyatları",
         subtitle:  "İstasyona göre fiyatlar",
         subtitleWithTime: "Güncellendi {{time}} ·",
         station:   "Benzinlik",
@@ -1352,7 +1355,7 @@ mapa: {
       },
 
       carProfile: {
-        title:       "🚗 Arabam",
+        title:       "Arabam",
         subtitle:    "Kişiselleştirilmiş sürüş maliyetleri",
         modelLabel:  "Araç modeli",
         modelPlaceholder: "örn. VW Golf 5",
@@ -1426,7 +1429,7 @@ mapa: {
       pageTitle:    "Safe City — Makceni.mk",
       headerTitle:  "Safe City",
       camerasCount: "{{count}} kamera",
-      camerasCountMobile: "{{count}}📷",
+      camerasCountMobile: "{{count}}",
       reportBtn:    "+ Kamera bildir",
       cancelBtn:    "✕ İptal",
       gasStationsBtn: "Benzinlikler",
@@ -1442,8 +1445,8 @@ mapa: {
         warningLabel:   "Uyarı",
         gpsOn:          "GPS etkin",
         gpsOff:         "GPS'i etkinleştir",
-        gpsHint:        "💡 Safe City kamera uyarıları almak için GPS'i etkinleştir",
-        soundHint:      "🔔 Kameraya {{dist}}m yaklaştığında ses duyacaksınız",
+        gpsHint:        "Safe City kamera uyarıları almak için GPS'i etkinleştir",
+        soundHint:      "Kameraya {{dist}}m yaklaştığında ses duyacaksınız",
         soundLabel:     "Yaklaşırken ses",
         osmLink:        "© OpenStreetMap",
       },
@@ -1453,8 +1456,8 @@ mapa: {
         gpsOff:   "GPS",
         report:   "+ Bildir",
         cancel:   "✕",
-        hint:     "💡 Kamera uyarıları için GPS'i etkinleştir",
-        soundHint:"🔔 {{dist}}m'deki kameraya yaklaşırken ses",
+        hint:     "Kamera uyarıları için GPS'i etkinleştir",
+        soundHint:"{{dist}}m'deki kameraya yaklaşırken ses",
       },
 
       errors: {
@@ -1515,7 +1518,7 @@ mapa: {
   },
 
   locate: {
-    button:    "📍 En yakın benzinlik",
+    button:    "En yakın benzinlik",
     locating:  "Bulunuyor...",
     found:     "✓ {{name}}",
     nearest:   "En yakın",

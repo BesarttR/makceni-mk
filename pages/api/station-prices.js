@@ -115,7 +115,10 @@ export default function StationPrices() {
         ))}
       </div>
 
-      <h1 style={{ marginBottom: "1rem" }}>{tr("stationPrices.title")}</h1>
+      <h1 style={{ marginBottom: "1rem", display:"flex", alignItems:"center", gap:8 }}>
+  <img src="/icons/gasstation1.png" style={{ width:28, height:28, objectFit:"contain" }} />
+  {tr("stationPrices.title")}
+</h1>
 
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
