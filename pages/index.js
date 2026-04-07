@@ -102,9 +102,9 @@ const FALLBACK_HISTORY = {
 };
 
 const FALLBACK_STATIONS = [
-  { key:"makpetrol", name:"Makpetrol", logo:"/logos/makpetrol.png", prices:{ benzin95:82.0, benzin98:83.5, dizel:92.5, lpg:59.0 } },
-  { key:"okta",      name:"Okta",      logo:"/logos/okta.png",      prices:{ benzin95:82.0, benzin98:83.5, dizel:92.5, lpg:59.0 } },
-  { key:"lukoil",    name:"Lukoil",    logo:"/logos/lukoil.png",    prices:{ benzin95:82.0, benzin98:83.5, dizel:92.5, lpg:59.0 } },
+  { key:"makpetrol", name:"Makpetrol", logo:"/logos/makpetrol.png", prices:{ benzin95:81.5, benzin98:83.5, dizel:95.0, lpg:59.0 } },
+  { key:"okta",      name:"Okta",      logo:"/logos/okta.png",      prices:{ benzin95:81.5, benzin98:83.5, dizel:95.0, lpg:59.0 } },
+  { key:"lukoil",    name:"Lukoil",    logo:"/logos/lukoil.png",    prices:{ benzin95:81.5, benzin98:83.5, dizel:95.0, lpg:59.0 } },
 ];
 
 function useWindowWidth() {
