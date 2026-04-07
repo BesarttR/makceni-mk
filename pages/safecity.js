@@ -713,4 +713,6 @@ export default function SafeCityPage() {
       </div>
     </>
   );
+}export async function getServerSideProps() {
+  return { props: {} };
 }

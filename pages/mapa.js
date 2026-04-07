@@ -563,3 +563,6 @@ export default function BenzinskiPage() {
     </>
   );
 }
+export async function getServerSideProps() {
+  return { props: {} };
+}

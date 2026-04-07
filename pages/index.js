@@ -1119,3 +1119,6 @@ background: scrolled
     </ThemeCtx.Provider>
   );
 }
+export async function getServerSideProps() {
+  return { props: {} };
+}
