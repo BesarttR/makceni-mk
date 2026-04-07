@@ -1026,9 +1026,9 @@ background: scrolled
             </p>
             <div style={{ animation:"heroIn 0.7s 0.4s both" }}>
               {isMobile?(
-                <div style={{marginBottom:32}}>
-                  <MobileCarousel fuelData={fuelData} activeIdx={activeIdx} onSelect={handleSelect} timeStr={timeStr} loading={loading} tr={tr} isDark={isDark} />
-                </div>
+               <div style={{marginBottom:32, marginLeft:`-${px}`, marginRight:`-${px}`, overflowX:"hidden"}}>
+  <MobileCarousel fuelData={fuelData} activeIdx={activeIdx} onSelect={handleSelect} timeStr={timeStr} loading={loading} tr={tr} isDark={isDark} />
+</div>
               ):(
                 <>
                   <div style={{ position:"relative", height:400, marginBottom:40, overflow:"visible" }}>
