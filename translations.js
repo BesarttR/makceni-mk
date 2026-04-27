@@ -204,13 +204,13 @@ const translations = {
 
    home: {
   priceChange: {
-  //benzin95: " -1.5 ден од полноќ",
-  //benzin98: " -1.5 ден од полноќ",
-  //dizel:    " -1.5 ден од полноќ",
+  benzin95: " +2.0 ден од полноќ",
+  benzin98: " +2.0 ден од полноќ",
+  dizel:    " -2.5 ден од полноќ",
   //lpg:      " +X.X ден од полноќ",
   //cng:      " +X.X ден од полноќ",
-  //ekstra:   " +0.5 ден од полноќ",
-  //mazut:    " -2.9 ден од полноќ",
+  ekstra:   " -1.0 ден од полноќ",
+  mazut:    " +0.4 ден од полноќ",
 },
   units: { perL: "ден/л", perKg: "ден/кг" },
   todayBadge:    "ДЕНЕС",
@@ -575,13 +575,13 @@ const translations = {
 
     home: {
 priceChange: {
-  //benzin95: " -1.5 den nga mesnata",
-  //benzin98: " -1.5 den nga mesnata",
-  //dizel:    " -1.5 den nga mesnata",
+  benzin95: " +2.0 den nga mesnata",
+  benzin98: " +2.0 den nga mesnata",
+  dizel:    " -2.5 den nga mesnata",
   //lpg:      " +X.X den nga mesnata",
   //cng:      " +X.X den nga mesnata",
-  //ekstra:   " +0.5 den nga mesnata",
-  //mazut:    " -2.9 den nga mesnata",
+  ekstra:   " -1.0 den nga mesnata",
+  mazut:    " +0.4 den nga mesnata",
 },
       units: { perL: "den/l", perKg: "den/kg" },
       todayBadge:    "SOT",
@@ -944,13 +944,13 @@ mapa: {
 
     home: {
 priceChange: {
-  //benzin95: " -1.5 den from midnight",
-  //benzin98: " -1.5 den from midnight",
-  //dizel:    " -1.5 den from midnight",
+  benzin95: " +2.0 den from midnight",
+  benzin98: " +2.0 den from midnight",
+  dizel:    " -2.5 den from midnight",
   //lpg:      " -X.X den from midnight",
   //cng:      " -X.X den from midnight",
-  //ekstra:   " +0.5 den from midnight",
-  //mazut:    " -2.9 den from midnight",
+  ekstra:   " -1.0 den from midnight",
+  mazut:    " +0.4 den from midnight",
 },
       units: { perL: "den/L", perKg: "den/kg" },
       todayBadge:    "TODAY",
@@ -1315,13 +1315,13 @@ share: {
 
     home: {
 priceChange: {
-  //benzin95: " -1.5 den geceyarısından itibaren",
-  //benzin98: " -1.5 den geceyarısından itibaren",
-  //dizel:    " -1.5 den geceyarısından itibaren",
+  benzin95: " +2.0 den geceyarısından itibaren",
+  benzin98: " +2.0 den geceyarısından itibaren",
+  dizel:    " -2.5 den geceyarısından itibaren",
   //lpg:      " -X.X den geceyarısından itibaren",
   //cng:      " -X.X den geceyarısından itibaren",
-  //ekstra:   " +0.5 den geceyarısından itibaren",
-  //mazut:    " -2.9 den geceyarısından itibaren",
+  ekstra:   " -1.0 den geceyarısından itibaren",
+  mazut:    " +0.4 den geceyarısından itibaren",
 },
       units: { perL: "den/L", perKg: "den/kg" },
       todayBadge:    "BUGÜN",
