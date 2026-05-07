@@ -25,7 +25,7 @@ function parsePrice(raw) {
   return isNaN(n) ? null : n;
 }
 
-async function scrapeGorivo() {
+async function scrapePrices() {
   const res = await fetch("https://gorivo.mk/", {
     headers: {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
@@ -45,17 +45,12 @@ async function scrapeGorivo() {
   ];
 
   for (const def of stationDefs) {
-    // Find the alt="StationName" anchor
     const altRegex = new RegExp(`alt=["']${def.name}["']`, "i");
     const altMatch = html.match(altRegex);
     if (!altMatch) continue;
 
-    // Grab the row (~2000 chars is more than enough for 4 cells)
     const chunk = html.slice(altMatch.index, altMatch.index + 2500);
 
-    // Match each <td>'s price content — either a "59,0 ден" type cell
-    // OR a range cell "53,5-54,0"
-    // Pattern looks for: <span class="...MuiTypography-caption..."> NUMBER
     const cellRegex = /MuiTypography-caption[^"]*"[^>]*>(\d{1,3},\d{1,2}(?:-\d{1,3},\d{1,2})?)/g;
     const matches = [];
     let m;
@@ -106,27 +101,22 @@ export default async function handler(req, res) {
   }
 
   try {
-    const scraped = await scrapeGorivo();
+    const scraped = await scrapePrices();
     const stations = mergeWithFallback(scraped);
-    const allOk = scraped.length === FALLBACK_STATIONS.length;
 
     const payload = {
       stations,
       updatedAt: new Date().toISOString(),
-      source: allOk ? "gorivo.mk" : scraped.length > 0 ? "gorivo.mk-partial" : "fallback",
-      scraped: scraped.length, // debug
     };
 
     cache = { data: payload, ts: Date.now() };
     res.setHeader("Cache-Control", "public, s-maxage=1800, stale-while-revalidate=3600");
     return res.status(200).json(payload);
   } catch (err) {
-    console.error("station-prices scrape failed:", err);
+    console.error("station-prices fetch failed:", err);
     return res.status(200).json({
       stations: FALLBACK_STATIONS,
       updatedAt: new Date().toISOString(),
-      source: "fallback",
-      error: err.message,
     });
   }
 }
