@@ -730,54 +730,6 @@ function NewsCard({ n, i, isDark }) {
   );
 }
 
-function StationPricesTable({ isMobile, tr, isDark }) {
-  const T = useT();
-  const LABELS=[{key:"benzin95",label:tr("stationPrices.benzin95"),color:"#F87171"},{key:"benzin98",label:tr("stationPrices.benzin98"),color:"#FCA5A5"},{key:"dizel",label:tr("stationPrices.dizel"),color:"#2DD4BF"},{key:"lpg",label:tr("stationPrices.lpg"),color:"#93C5FD"}];
-  const [stations,setStations]=useState(FALLBACK_STATIONS); const [loading,setLoading]=useState(true); const [updatedAt,setUpdatedAt]=useState(null);
-  useEffect(()=>{ fetch("/api/station-prices").then(r=>r.json()).then(d=>{ if(d.stations?.length>0) setStations(d.stations); if(d.updatedAt) setUpdatedAt(d.updatedAt); setLoading(false); }).catch(()=>setLoading(false)); },[]);
-  const timeStr=updatedAt?new Date(updatedAt).toLocaleTimeString("mk-MK",{hour:"2-digit",minute:"2-digit"}):null;
-  const Hdr=()=>(<div style={{ padding:"18px 22px", background:isDark?"rgba(12,12,24,0.8)":T.surface2, borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}><div><div style={{ fontSize:15, fontWeight:700, color:T.text, display:"flex", alignItems:"center", gap:8 }}><img src={isDark?"/icons/gasstation1.png":"/icons/gasstation.png"} style={{width:32,height:32,objectFit:"contain"}}/>{tr("home.stationTable.title")}</div><div style={{ fontSize:12, color:T.muted, marginTop:2 }}>{timeStr?tr("home.stationTable.subtitleWithTime",{time:timeStr}):tr("home.stationTable.subtitle")}</div></div>{loading?<div style={{ width:7, height:7, borderRadius:"50%", border:`2px solid ${T.violet}`, borderTopColor:"transparent", animation:"spin 0.7s linear infinite" }} />:<div style={{ display:"flex", alignItems:"center", gap:5, background:T.greenBg, border:`1px solid ${T.greenBdr}`, borderRadius:20, padding:"3px 9px" }}><LiveDot color={T.cyan} /><span style={{ fontSize:11, fontWeight:700, color:T.cyan }}>{tr("nav.live")}</span></div>}</div>);
-  if(isMobile) return (
-    <GlassCard glow isDark={isDark} style={{ borderRadius:20, overflow:"hidden" }}><Hdr />
-      <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:12}}>
-        {stations.map(s=>(
-          <div key={s.key} style={{ background:isDark?"rgba(0,0,0,0.4)":T.surface2, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", backdropFilter:"blur(8px)" }}>
-            <div style={{ padding:"11px 14px", borderBottom:`1px solid ${T.border}` }}><img src={s.logo} alt={s.name} style={{ height:s.key==="lukoil"?54:26, width:"auto", maxWidth:110, objectFit:"contain", filter:"opacity(0.85)" }} onError={e=>{ e.currentTarget.style.display="none"; }} /></div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr"}}>
-              {LABELS.map((f,fi)=>(
-                <div key={f.key} style={{ padding:"10px 14px", borderRight:fi%2===0?`1px solid ${T.border}`:"none", borderBottom:fi<2?`1px solid ${T.border}`:"none" }}>
-                  <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><span style={{ width:6, height:6, borderRadius:"50%", background:f.color, display:"inline-block", boxShadow:`0 0 5px ${f.color}88` }} /><div style={{ fontSize:10, fontWeight:700, color:T.muted, textTransform:"uppercase", letterSpacing:0.4 }}>{f.label}</div></div>
-                  <div style={{ fontSize:17, fontWeight:800, color:T.text }}>{loading?"—":s.prices[f.key]!=null?s.prices[f.key].toFixed(1):"—"}<span style={{ fontSize:10, fontWeight:500, color:T.muted, marginLeft:2 }}>ден</span></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div style={{ padding:"8px 22px 12px", fontSize:11, color:T.muted, borderTop:`1px solid ${T.border}` }}>{tr("home.stationTable.disclaimer")}</div>
-    </GlassCard>
-  );
-  return (
-    <GlassCard glow isDark={isDark} style={{ borderRadius:20, overflow:"hidden" }}><Hdr />
-      <div style={{overflowX:"auto"}}>
-        <table style={{width:"100%",borderCollapse:"collapse"}}>
-          <thead><tr style={{background:isDark?"rgba(0,0,0,0.3)":T.surface2}}>
-            <th style={{ padding:"12px 22px", textAlign:"left", fontSize:11, fontWeight:700, color:T.muted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>{tr("home.stationTable.station")}</th>
-            {LABELS.map(f=><th key={f.key} style={{ padding:"12px 22px", textAlign:"right", fontSize:11, fontWeight:700, color:T.muted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}><span style={{display:"inline-flex",alignItems:"center",gap:5}}><span style={{ width:8, height:8, borderRadius:"50%", background:f.color, display:"inline-block", boxShadow:`0 0 5px ${f.color}88` }} />{f.label}</span></th>)}
-          </tr></thead>
-          <tbody>{stations.map((s,si)=>(
-            <tr key={s.key} style={{ borderBottom:si<stations.length-1?`1px solid ${T.border}`:"none", transition:"background 0.15s" }} onMouseEnter={e=>e.currentTarget.style.background=isDark?"rgba(255,255,255,0.02)":T.surface2} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-              <td style={{padding:"16px 22px"}}><img src={s.logo} alt={s.name} style={{ height:s.key==="lukoil"?54:26, width:"auto", maxWidth:90, objectFit:"contain", filter:"opacity(0.85)" }} onError={e=>{ e.currentTarget.style.display="none"; }} /></td>
-              {LABELS.map(f=><td key={f.key} style={{padding:"16px 22px",textAlign:"right"}}>{loading?<span style={{fontSize:18,fontWeight:800,color:T.muted}}>—</span>:<><span style={{fontSize:20,fontWeight:800,color:T.text}}>{s.prices[f.key]!=null?s.prices[f.key].toFixed(1):"—"}</span><span style={{fontSize:11,color:T.muted,marginLeft:4}}>ден</span></>}</td>)}
-            </tr>
-          ))}</tbody>
-        </table>
-      </div>
-      <div style={{ padding:"8px 22px 12px", fontSize:11, color:T.muted, borderTop:`1px solid ${T.border}` }}>{tr("home.stationTable.disclaimer")}</div>
-    </GlassCard>
-  );
-}
-
 function FeatureCard({ card, isDark }) {
   const T = useT();
   const [hov,setHov]=useState(false);
@@ -1046,8 +998,6 @@ background: scrolled
 
           {/* Body */}
           <main style={{ position:"relative", zIndex:1, maxWidth:1200, margin:"0 auto", padding:`0 ${px} 80px` }}>
-            <div style={{marginBottom:40}}><StationPricesTable isMobile={isMobile} tr={tr} isDark={isDark} /></div>
-            <Divider />
             <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:16, marginBottom:40 }}>
               {featureCards.map(card=><FeatureCard key={card.href} card={card} isDark={isDark} />)}
             </div>

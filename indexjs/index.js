@@ -41,14 +41,6 @@ const FALLBACK_HISTORY = {
   mazut:    { "7д": [46.5,47.0,47.0,47.5,47.5,47.5,47.5], "30д": [43,43,44,44,44,45,45,45,46,46,46,46,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47.5], "6м": [38,39,39,40,40,41,41,42,42,43,43,44,44,45,45,46,46,47,47,47.5,47.5,47.5,47.5,47.5] },
 };
 
-const FALLBACK_STATIONS = [
-  { key: "makpetrol", name: "Makpetrol", logo: "/logos/makpetrol.png", prices: { benzin95: 82.0, benzin98: 83.5, dizel: 92.5, lpg: 59.0 } },
-  { key: "okta",      name: "Okta",      logo: "/logos/okta.png",      prices: { benzin95: 82.0, benzin98: 83.5, dizel: 92.5, lpg: 59.0 } },
-  { key: "lukoil",    name: "Lukoil",    logo: "/logos/lukoil.png",    prices: { benzin95: 82.0, benzin98: 83.5, dizel: 92.5, lpg: 59.0 } },
-];
-
-
-
 function useWindowWidth() {
   const [w, setW] = useState(undefined);
   useEffect(() => {
@@ -920,116 +912,6 @@ function NewsCard({ n, i }) {
   );
 }
 
-function StationPricesTable({ isMobile, tr }) {
-// CORRECT - uses tr()
-const STATION_FUEL_LABELS = [
-  { key: "benzin95", label: tr("stationPrices.benzin95"), color: "#F87171" },
-  { key: "benzin98", label: tr("stationPrices.benzin98"), color: "#FCA5A5" },
-  { key: "dizel",    label: tr("stationPrices.dizel"),    color: "#86EFAC" },
-  { key: "lpg",      label: tr("stationPrices.lpg"),      color: "#93C5FD" },
-];
-  const [stations, setStations] = useState(FALLBACK_STATIONS);
-  const [loading, setLoading] = useState(true);
-  const [updatedAt, setUpdatedAt] = useState(null);
-
-  useEffect(() => {
-    fetch("/api/station-prices").then(r => r.json()).then(d => {
-      if (d.stations && d.stations.length > 0) setStations(d.stations);
-      if (d.updatedAt) setUpdatedAt(d.updatedAt);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
-
-  const timeStr = updatedAt ? new Date(updatedAt).toLocaleTimeString("mk-MK", { hour: "2-digit", minute: "2-digit" }) : null;
-
-  if (isMobile) {
-    return (
-      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden" }}>
-        <div style={{ padding: "16px 20px", background: C.surface2, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{tr("home.stationTable.title")}</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>{timeStr ? tr("home.stationTable.subtitleWithTime", { time: timeStr }) : tr("home.stationTable.subtitle")}</div>
-          </div>
-          {loading ? <div style={{ width: 7, height: 7, borderRadius: "50%", border: `2px solid ${C.orange}`, borderTopColor: "transparent", animation: "spin 0.7s linear infinite" }} />
-            : <div style={{ display: "flex", alignItems: "center", gap: 5, background: C.greenBg, border: `1px solid ${C.greenBdr}`, borderRadius: 20, padding: "3px 9px" }}><LiveDot /><span style={{ fontSize: 11, fontWeight: 700, color: C.green }}>{tr("nav.live")}</span></div>}
-        </div>
-        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-          {stations.map(station => (
-            <div key={station.key} style={{ background: C.surface2, border: `1px solid ${C.border}`, borderRadius: 13, overflow: "hidden" }}>
-              <div style={{ padding: "11px 14px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 8 }}>
-                <img src={station.logo} alt={station.name} style={{ height: 28, width: "auto", maxWidth: 90, objectFit: "contain" }} onError={e => { e.currentTarget.style.display = "none"; }} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-                {STATION_FUEL_LABELS.map((f, fi) => (
-                  <div key={f.key} style={{ padding: "10px 14px", borderRight: fi % 2 === 0 ? `1px solid ${C.border}` : "none", borderBottom: fi < 2 ? `1px solid ${C.border}` : "none" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: f.color, display: "inline-block", flexShrink: 0 }} />
-                      <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4 }}>{f.label}</div>
-                    </div>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>
-                      {loading ? "—" : station.prices[f.key] != null ? station.prices[f.key].toFixed(1) : "—"}
-                      <span style={{ fontSize: 10, fontWeight: 500, color: C.muted, marginLeft: 2 }}>ден</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div style={{ padding: "8px 20px 12px", fontSize: 11, color: C.muted, borderTop: `1px solid ${C.border}` }}>{tr("home.stationTable.disclaimer")}</div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden" }}>
-      <div style={{ padding: "16px 20px", background: C.surface2, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{tr("home.stationTable.title")}</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>{timeStr ? tr("home.stationTable.subtitleWithTime", { time: timeStr }) : tr("home.stationTable.subtitle")}</div>
-        </div>
-        {loading ? <div style={{ width: 7, height: 7, borderRadius: "50%", border: `2px solid ${C.orange}`, borderTopColor: "transparent", animation: "spin 0.7s linear infinite" }} />
-          : <div style={{ display: "flex", alignItems: "center", gap: 5, background: C.greenBg, border: `1px solid ${C.greenBdr}`, borderRadius: 20, padding: "3px 9px" }}><LiveDot /><span style={{ fontSize: 11, fontWeight: 700, color: C.green }}>{tr("nav.live")}</span></div>}
-      </div>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: C.surface2 }}>
-              <th style={{ padding: "12px 20px", textAlign: "left", fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.8, borderBottom: `1px solid ${C.border}` }}>{tr("home.stationTable.station")}</th>
-              {STATION_FUEL_LABELS.map(f => (
-                <th key={f.key} style={{ padding: "12px 20px", textAlign: "right", fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.8, borderBottom: `1px solid ${C.border}` }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: f.color, display: "inline-block" }} />{f.label}
-                  </span>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {stations.map((station, si) => (
-              <tr key={station.key} style={{ borderBottom: si < stations.length - 1 ? `1px solid ${C.border}` : "none", transition: "background 0.15s" }}
-                onMouseEnter={e => e.currentTarget.style.background = C.surface2}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                <td style={{ padding: "16px 20px" }}>
-                  <img src={station.logo} alt={station.name} style={{ height: 32, width: "auto", maxWidth: 110, objectFit: "contain" }} onError={e => { e.currentTarget.style.display = "none"; }} />
-                </td>
-                {STATION_FUEL_LABELS.map(f => (
-                  <td key={f.key} style={{ padding: "16px 20px", textAlign: "right" }}>
-                    {loading ? <span style={{ fontSize: 18, fontWeight: 800, color: C.muted }}>—</span> : (
-                      <><span style={{ fontSize: 20, fontWeight: 800, color: C.text }}>{station.prices[f.key] != null ? station.prices[f.key].toFixed(1) : "—"}</span><span style={{ fontSize: 11, color: C.muted, marginLeft: 4 }}>ден</span></>
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div style={{ padding: "8px 20px 12px", fontSize: 11, color: C.muted, borderTop: `1px solid ${C.border}` }}>{tr("home.stationTable.disclaimer")}</div>
-    </div>
-  );
-}
-
 export default function Home() {
   const { lang, setLang, tr } = useLanguage();
   const [mounted, setMounted] = useState(false);
@@ -1233,9 +1115,6 @@ const today = new Date().toLocaleDateString(localeMap[lang] || "mk-MK", { day: "
         </div>
 
         <main style={{ position: "relative", zIndex: 1, maxWidth: 1180, margin: "0 auto", padding: `36px ${px} 80px` }}>
-
-          <div style={{ marginBottom: 36 }}><StationPricesTable isMobile={isMobile} tr={tr} /></div>
-          <div style={{ height: 1, background: C.border, marginBottom: 36 }} />
 
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14, marginBottom: 40 }}>
             <a href="/mapa" style={{ textDecoration: "none", display: "block", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden", transition: "all 0.2s ease" }}
