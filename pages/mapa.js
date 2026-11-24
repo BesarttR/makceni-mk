@@ -171,10 +171,10 @@ export default function BenzinskiPage() {
     if (!mapReady || !leafletRef.current) return;
     const { L, map } = leafletRef.current;
     if (tileLayerRef.current) tileLayerRef.current.remove();
-    const tileUrl = isDark
-      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-    tileLayerRef.current = L.tileLayer(tileUrl, { subdomains:"abcd", maxZoom:19 }).addTo(map);
+    tileLayerRef.current = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      className: isDark ? "tiles-dark" : "",
+    }).addTo(map);
   }, [isDark, mapReady]);
 
   useEffect(() => {
@@ -189,10 +189,10 @@ export default function BenzinskiPage() {
       const map = L.map(mapRef.current, { center:[41.6086,21.7453], zoom:8, zoomControl:false });
       setTimeout(() => map.invalidateSize(), 100);
       setTimeout(() => map.invalidateSize(), 500);
-      const tileUrl = isDark
-        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-      tileLayerRef.current = L.tileLayer(tileUrl, { subdomains:"abcd", maxZoom:19 }).addTo(map);
+      tileLayerRef.current = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        className: isDark ? "tiles-dark" : "",
+      }).addTo(map);
       L.control.zoom({ position:"bottomright" }).addTo(map);
       leafletRef.current = { L, map };
       setMapReady(true);
@@ -422,6 +422,8 @@ export default function BenzinskiPage() {
           *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
           body{overflow:hidden;font-family:inherit;background:${T.bg};color:${T.text}}
           .leaflet-control-attribution{display:none!important}
+          .tiles-dark{filter:invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);}
+          .tiles-dark{filter:invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);}
           .leaflet-control-zoom a{background:${isDark?"rgba(14,14,30,0.95)":"rgba(255,255,255,0.95)"}!important;color:${T.textMid}!important;border-color:${T.border}!important;backdrop-filter:blur(12px);}
           .leaflet-control-zoom a:hover{color:${T.text}!important;background:${T.surface2}!important;}
           ::-webkit-scrollbar{width:3px;background:transparent}

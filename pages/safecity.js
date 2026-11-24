@@ -174,10 +174,10 @@ export default function SafeCityPage() {
     const map = leafletRef.current._map;
     const L = leafletRef.current;
     if (tileLayerRef.current) map.removeLayer(tileLayerRef.current);
-    const tileUrl = isDark
-      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-    tileLayerRef.current = L.tileLayer(tileUrl, { subdomains:"abcd", maxZoom:19 }).addTo(map);
+    tileLayerRef.current = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      className: isDark ? "tiles-dark" : "",
+    }).addTo(map);
   }, [isDark, mapReady]);
 
   useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
@@ -291,10 +291,10 @@ export default function SafeCityPage() {
       cs.onload = () => {
         const L = window.L; leafletRef.current = L;
         const map = L.map(mapRef.current, { center:[41.9981,21.4254], zoom:13, zoomControl:false, attributionControl:false });
-        const tileUrl = isDark
-          ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-        tileLayerRef.current = L.tileLayer(tileUrl, { subdomains:"abcd", maxZoom:19 }).addTo(map);
+        tileLayerRef.current = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          className: isDark ? "tiles-dark" : "",
+        }).addTo(map);
         L.control.zoom({ position:"bottomright" }).addTo(map);
         leafletRef.current._map = map; setMapReady(true);
       };
@@ -399,6 +399,11 @@ export default function SafeCityPage() {
           .leaflet-control-zoom a{background:${isDark?"rgba(14,14,30,0.95)":T.surface}!important;color:${T.textMid}!important;border-color:${T.border}!important;backdrop-filter:blur(12px);}
           .leaflet-control-zoom a:hover{color:${T.text}!important;background:${T.surface2}!important;}
           .leaflet-container{background:${T.bg}!important;}
+          .tiles-dark{filter:invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);}
+          .tiles-dark{filter:invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);}
+          .tiles-dark{filter:invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);}
+          .tiles-dark{filter:invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);}
+          .tiles-dark{filter:invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);}
           .marker-cluster{background:transparent!important;border:none!important;}
           .marker-cluster div{background:transparent!important;}
           @keyframes ping{0%{transform:scale(1);opacity:0.3;}75%,100%{transform:scale(2.2);opacity:0;}}

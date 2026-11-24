@@ -231,19 +231,17 @@ const GORIVO_CAMERAS = [
   { id: 218, lat: 41.99706852514068, lng: 21.55495702791909 },
 ];
 export default async function handler(req, res) {
-const origin = req.headers.origin ?? req.headers.referer ?? "";
-const allowed = ALLOWED_ORIGINS.some(o => origin.startsWith(o));
-
-if (origin && !allowed) {
-  return res.status(403).json({ error: "Forbidden" });
-}
-
+  // Cache hit
   if (cache && cacheTime && Date.now() - cacheTime < CACHE_DURATION) {
+    res.setHeader("Cache-Control", "s-maxage=86400, stale-while-revalidate");
     return res.status(200).json(cache);
   }
 
+  let cameras = [...GORIVO_CAMERAS];
+  let source = "gorivo.mk";
+
   try {
-    const query = `[out:json][timeout:25];
+    const query = `[out:json][timeout:10];
 (
   node["highway"="speed_camera"](41.85,21.30,42.10,21.65);
   node["enforcement"="maxspeed"](41.85,21.30,42.10,21.65);
@@ -254,53 +252,33 @@ out center;`;
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: "data=" + encodeURIComponent(query),
+      signal: AbortSignal.timeout(4000), // give up fast
     });
-
-    let cameras = [...GORIVO_CAMERAS];
 
     if (response.ok) {
       const json = await response.json();
-      const osmCameras = json.elements
+      (json.elements || [])
         .filter(el => el.lat && el.lon)
-        .map(el => ({
-          id: el.id,
-          lat: el.lat,
-          lng: el.lon,
-          maxspeed: el.tags?.maxspeed || null,
-        }));
-
-      osmCameras.forEach(osmCam => {
-        const isDuplicate = cameras.some(c => {
-          const dlat = Math.abs(c.lat - osmCam.lat);
-          const dlng = Math.abs(c.lng - osmCam.lng);
-          return dlat < 0.0005 && dlng < 0.0005;
+        .forEach(el => {
+          const dup = cameras.some(c =>
+            Math.abs(c.lat - el.lat) < 0.0005 && Math.abs(c.lng - el.lon) < 0.0005
+          );
+          if (!dup) cameras.push({ id: el.id, lat: el.lat, lng: el.lon, maxspeed: el.tags?.maxspeed || null });
         });
-        if (!isDuplicate) cameras.push(osmCam);
-      });
+      source = "gorivo.mk + OSM";
     }
-
-    const data = {
-      cameras,
-      updatedAt: new Date().toISOString(),
-      count: cameras.length,
-      source: "gorivo.mk + OSM",
-    };
-
-    cache = data;
-    cacheTime = Date.now();
-    res.setHeader("Cache-Control", "s-maxage=86400, stale-while-revalidate");
-    return res.status(200).json(data);
-
   } catch (err) {
-    console.error("Camera fetch error:", err.message);
-    const data = {
-      cameras: GORIVO_CAMERAS,
-      updatedAt: new Date().toISOString(),
-      count: GORIVO_CAMERAS.length,
-      source: "gorivo.mk (cached)",
-    };
-    cache = data;
-    cacheTime = Date.now();
-    return res.status(200).json(data);
+    console.error("Overpass failed, using local list:", err.message);
   }
+
+  const data = { cameras, updatedAt: new Date().toISOString(), count: cameras.length, source };
+
+  // Only cache a full result for 24h; cache the fallback for 5 min so OSM gets retried soon
+  const ttl = source.includes("OSM") ? CACHE_DURATION : 5 * 60 * 1000;
+  cache = data;
+  cacheTime = Date.now() - (CACHE_DURATION - ttl);
+
+  res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
+  return res.status(200).json(data);
 }
+
